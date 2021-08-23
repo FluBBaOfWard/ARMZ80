@@ -1,0 +1,89 @@
+ARMZ80 revision history
+-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+V1.9.7 - 2021-05-11 (FluBBa)
+	Added setResetPin.
+
+V1.9.6 - 2021-03-05 (FluBBa)
+	Added load/save state.
+	Broke out some defines from z80mac.h
+	Renamed files to be more like the other cpu cores.
+
+V1.9.4 - 2020-06-03 (FluBBa)
+	Better support for GBA.
+	New defines, Z80_FAST and Z80_LARGE_MAP for different behaviours.
+
+V1.9.1 - 2019-07-26 (FluBBa)
+	Optimised NMI IRQ.
+	Optimised EXX opcode.
+	Optimised FD opcodes.
+	Optimised memory access.
+
+V1.9.0 - 2018-07-25 (FluBBa)
+	Added support for all interrupt modes.
+	Added support for interrupt acknowledge.
+	Optimised some memory accesses for size.
+	Changed "cycles in" to represent normal cycles.
+	Code clean up.
+
+V1.8.1 - 2016-07-31 (FluBBa)
+	Changed to unified assembler style.
+
+V1.8.0 - 2016-03-03 (FluBBa)
+	Optimised NMI & IRQ check.
+
+V1.7.0 - 2015-05-27 (FluBBa)
+	Removed specific MD flags from CPU reset.
+	Optimised NMI check.
+
+V1.6.5 - 2011-07-10 (FluBBa)
+	Optimised a lot of opcodes for size.
+
+V1.6.0 - 2010-11-28 (FluBBa)
+	Optimized RRC & SLL opcodes.
+	Added X & Y flags to the PZSTable.
+
+V1.5.0 - 2009-11-06 (FluBBa)
+	Added full support for 16bit IO address.
+	Removed need for Z80_OUT_C & Z80_IN_C.
+
+V1.4.0 - 2009-07-27 (FluBBa)
+	Optimized IRQ checking.
+	Added checking of NMI.
+
+V1.3.0 - 2009-07-12 (FluBBa)
+	Moved memory handling out of the cpu core.
+
+V1.2.5 - 2009-02-03 (FluBBa)
+	Changed more comments to be gcc compliant.
+	Optimised HALT instruction.
+
+V1.2.0 - 2008-03-28 (FluBBa)
+	Changed comments to be gcc compliant.
+	Moved z80 register defines to z80mac.h & z80.h
+	Fixed pushing and poping of AF register.
+	Fixed timing of HALT instruction.
+	Optimised all Z80 memory reads, one instruction and cycle shorter.
+	Optimised DEC opcodes.
+	Optimised SBC A/HL opcode.
+	Optimised CPI, CPD, CPIR & CPDR opcodes.
+
+V1.1.2 - 2007-05-00 (FluBBa)
+	Fixed initializing of all CPU regs on reset.
+	Optimised some of the SBC instructions.
+	Optimised DAA opcode.
+	Optimised one of the SRA opcodes.
+
+V1.1.0 - 2006-11-30 (FluBBa)
+	Changed Halt instruction to allways jump to nexttimeout.
+
+V1.0.0 - 2006-06-19 (FluBBa)
+	Optimised some of the SBC instructions.
+
+V0.0.1 - 2005-09-17 (FluBBa)
+	Fixed RETI/RETN.
+
+V0.0.0 - 2005-05-14 (FluBBa)
+	Started Coding.
+
