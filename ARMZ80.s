@@ -12,7 +12,11 @@
 	.section .iwram, "ax", %progbits	;@ For the GBA
 	#endif
 #else
+	#ifdef GBA
+	.section .ewram, "ax"				;@ For the GBA
+	#else
 	.section .text						;@ For anything else
+	#endif
 #endif
 	.align 2
 
@@ -27,6 +31,7 @@
 	.global Z80SaveState
 	.global Z80LoadState
 	.global Z80GetStateSize
+	.global Z80RedirectOpcode
 
 	.global Z80OpTable
 //	.global Z80MemWriteTbl
@@ -3719,10 +3724,8 @@ EiFix:	;@ EI should be delayed by 1 instruction.
 
 
 ;@----------------------------------------------------------------------------
-#ifdef Z80_USE_FAST_MEM
-	#ifdef GBA
+#ifdef GBA
 	.section .ewram, "ax"		;@ For the GBA
-	#endif
 #else
 	.section .text				;@ For everything else
 #endif
@@ -3765,6 +3768,7 @@ _xx:						;@ Invalid opcode
 	]*/
 	fetch 4
 
+	.section .text				;@ For everything else
 ;@----------------------------------------------------------------------------
 Z80IrqVectorDummy:
 ;@----------------------------------------------------------------------------
@@ -3870,6 +3874,13 @@ Z80GetStateSize:			;@ Out r0=state size.
 	.type   Z80GetStateSize STT_FUNC
 ;@----------------------------------------------------------------------------
 	mov r0,#z80StateEnd-z80StateStart	;@ Right now 0x48
+	bx lr
+;@----------------------------------------------------------------------------
+Z80RedirectOpcode:		;@ In r0=opcode, r1=address.
+	.type   Z80RedirectOpcode STT_FUNC
+;@----------------------------------------------------------------------------
+	ldr r2,=Z80OpTable
+	str r1,[r2,r0,lsl#2]
 	bx lr
 ;@----------------------------------------------------------------------------
 #ifdef NDS

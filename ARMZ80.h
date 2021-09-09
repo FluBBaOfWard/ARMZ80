@@ -63,6 +63,13 @@ int Z80LoadState(ARMZ80Core *cpu, const void *source);
  */
 int Z80GetStateSize(void);
 
+/**
+ * Redirect/patch an opcode to a new function.
+ * @param  opcode: Which opcode to redirect.
+ * @param  *function: Pointer to new function .
+ */
+void Z80RedirectOpcode(int opcode, void *function);
+
 void Z80SetIRQPin(bool set);
 void Z80SetNMIPin(bool set);
 void Z80RestoreAndRunXCycles(int cycles);
