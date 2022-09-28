@@ -39,7 +39,7 @@ typedef struct {
 
 extern ARMZ80Core Z80OpTable;
 
-void Z80Reset(int type);
+void Z80Reset(ARMZ80Core *cpu, int type);
 
 /**
  * Saves the state of the cpu to the destination.
@@ -74,7 +74,6 @@ void Z80SetIRQPin(bool set);
 void Z80SetNMIPin(bool set);
 void Z80RestoreAndRunXCycles(int cycles);
 void Z80RunXCycles(int cycles);
-void Z80CheckIRQs(void);
 
 #ifdef __cplusplus
 }

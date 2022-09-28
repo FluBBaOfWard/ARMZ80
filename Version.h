@@ -1,1 +1,1 @@
-#define ARMZ80VERSION "V1.9.7"
+#define ARMZ80VERSION "V1.9.8"

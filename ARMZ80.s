@@ -27,7 +27,6 @@
 	.global Z80SetResetPin
 	.global Z80RestoreAndRunXCycles
 	.global Z80RunXCycles
-	.global Z80CheckIRQs
 	.global Z80SaveState
 	.global Z80LoadState
 	.global Z80GetStateSize
@@ -37,6 +36,7 @@
 //	.global Z80MemWriteTbl
 //	.global Z80MemReadTbl
 	.global translateZ80PCToOffset
+	.global outOfCycles
 
 	.extern Z80In
 	.extern Z80Out
@@ -69,10 +69,6 @@ debugContinue:
 	ldr pc,[z80optbl,r0,lsl#2]
 	.pool
 */
-;@----------------------------------------------------------------------------
-outOfCycles:
-	sub z80pc,z80pc,#1
-	ldr pc,[z80optbl,#z80NextTimeout]
 ;@----------------------------------------------------------------------------
 _49:	;@ LD C,C
 _52:	;@ LD D,D
@@ -3600,7 +3596,13 @@ translateZ80PCToOffset:		;@ In = z80pc, out = offset z80pc
 	bx lr						;@ Out: z80pc.
 #endif // Z80_FAST
 
-
+;@----------------------------------------------------------------------------
+outOfCycles:
+	sub z80pc,z80pc,#1
+	ldr pc,[z80optbl,#z80NextTimeout]
+returnToCaller:
+	ldmfd sp!,{lr}
+	bx lr
 ;@----------------------------------------------------------------------------
 Z80SetResetPin:
 ;@----------------------------------------------------------------------------
@@ -3652,6 +3654,8 @@ Z80RestoreAndRunXCycles:	;@ r0 = number of cycles to run
 ;@----------------------------------------------------------------------------
 Z80RunXCycles:				;@ r0 = number of cycles to run
 ;@----------------------------------------------------------------------------
+	stmfd sp!,{lr}
+addR0Cycles:
 	add cycles,cycles,r0,lsl#CYC_SHIFT
 ;@----------------------------------------------------------------------------
 Z80CheckIRQs:
@@ -3717,7 +3721,7 @@ EiFix:	;@ EI should be delayed by 1 instruction.
 	ldr r1,[z80optbl,#z80NextTimeout_]
 	str r1,[z80optbl,#z80NextTimeout]
 	mov r0,r0,lsr#CYC_SHIFT			;@ Don't add any cpu bits.
-	b Z80RunXCycles
+	b addR0Cycles
 ;@----------------------------------------------------------------------------
 
 
@@ -3777,14 +3781,19 @@ Z80IrqAckDummy:
 	bx lr
 
 ;@----------------------------------------------------------------------------
-Z80Reset:					;@ r0 = cpu type, r10=z80optbl
+Z80Reset:					;@ r0=z80optbl, r1 = cpu type
 ;@ Called by cpuReset, (r0-r3,r12 are free to use)
 ;@----------------------------------------------------------------------------
 	stmfd sp!,{r4-r11,lr}
+	mov z80optbl,r0
 
-	adr r1,registerValues		;@ Startup values for different versions of the cpu.
+	ldr r0,=returnToCaller
+	str r0,[z80optbl,#z80NextTimeout]
+	str r0,[z80optbl,#z80NextTimeout_]
+
+	adr r0,registerValues		;@ Startup values for different versions of the cpu.
 	mov r2,#14*4
-	mla r1,r0,r2,r1
+	mla r1,r2,r1,r0
 
 	mov cycles,#0
 	mov z80pc,#0

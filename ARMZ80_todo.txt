@@ -10,6 +10,25 @@ ARMZ80 To do
 	Check NMI for Coleco games?
 	Emulate X & Y flags more correctly.
 
+------------------------------------------------------------------------------
+If what I've got is correct it wasn't in fact the MEMPTR but the flags on the non indirect BIT instruction.
+
+My implementation followed the comments inside of the Undocumentd Z80 PDF which states:
+
+SF flag Set if n = 7 and tested bit is set.
+ZF flag Set if the tested bit is reset.
+YF flag Set if n = 5 and tested bit is set.
+HF flag Always set.
+XF flag Set if n = 3 and tested bit is set.
+PF flag Set just like ZF flag.
+NF flag Always reset.
+CF flag Unchanged.
+
+Which I was doing, and failing.
+If I change my BIT instruction to take Bit 5/Bit 3 (YF/XF) from the value being tested,
+ignoring the bit being tested, it passes.
+------------------------------------------------------------------------------
+
 ;@----------------------------------------------------------------------------
 _27:	;@ DAA				Decimal Adjust Accumulator
 ;@----------------------------------------------------------------------------
