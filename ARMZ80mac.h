@@ -100,7 +100,7 @@
 	.macro executeOpcode count
 	subs cycles,cycles,#(\count)*CYCLE
 	ldrpl pc,[z80optbl,r0,lsl#2]
-	b outOfCycles
+	b Z80OutOfCycles
 	.endm
 
 /*

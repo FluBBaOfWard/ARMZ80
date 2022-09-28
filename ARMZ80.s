@@ -36,7 +36,7 @@
 //	.global Z80MemWriteTbl
 //	.global Z80MemReadTbl
 	.global translateZ80PCToOffset
-	.global outOfCycles
+	.global Z80OutOfCycles
 
 	.extern Z80In
 	.extern Z80Out
@@ -3597,7 +3597,7 @@ translateZ80PCToOffset:		;@ In = z80pc, out = offset z80pc
 #endif // Z80_FAST
 
 ;@----------------------------------------------------------------------------
-outOfCycles:
+Z80OutOfCycles:
 	sub z80pc,z80pc,#1
 	ldr pc,[z80optbl,#z80NextTimeout]
 returnToCaller:
