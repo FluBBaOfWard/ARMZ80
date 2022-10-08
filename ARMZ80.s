@@ -44,12 +44,12 @@
 
 /*
 fetchDebug:
-	ldrmi pc,[z80optbl,#z80NextTimeout]
+	ldrmi pc,[z80ptr,#z80NextTimeout]
 
 	encodeFLG
 	and r0,r0,#0xFF
 	orr z80a,z80a,r0,lsl#16
-	add z80xy,z80optbl,#z80IX
+	add z80xy,z80ptr,#z80IX
 	ldrh r1,[z80xy,#2]
 	add z80xy,z80xy,#4		;@ IY
 	ldrh r2,[z80xy,#2]
@@ -66,7 +66,7 @@ fetchDebug:
 debugContinue:
 	and z80a,z80a,#0xFF000000
 	ldrb r0,[z80pc],#1
-	ldr pc,[z80optbl,r0,lsl#2]
+	ldr pc,[z80ptr,r0,lsl#2]
 	.pool
 */
 ;@----------------------------------------------------------------------------
@@ -124,7 +124,7 @@ _07:	;@ RLCA				Rotate accu left
 ;@----------------------------------------------------------------------------
 _08:	;@ EX AF,AF'		Exchange AF & AF'
 ;@----------------------------------------------------------------------------
-	add r0,z80optbl,#z80Regs2
+	add r0,z80ptr,#z80Regs2
 	swp z80f,z80f,[r0]
 	add r0,r0,#4
 	swp z80a,z80a,[r0]
@@ -176,7 +176,7 @@ _10:	;@ DJNZ,*			Decrease B jump if not zero
 	sub z80bc,z80bc,#0x01000000
 	tst z80bc,#0xff000000
 	addne z80pc,z80pc,r0
-	subne cycles,cycles,#5*CYCLE
+	subne z80cyc,z80cyc,#5*CYCLE
 	fetch 8
 ;@----------------------------------------------------------------------------
 _11:	;@ LD DE,#nnnn
@@ -224,7 +224,7 @@ _18:	;@ JR *				Relative jump
 ;@----------------------------------------------------------------------------
 	ldrsb r0,[z80pc],#1
 ;@	cmp r0,#-2
-;@	andeq cycles,cycles,#CYC_MASK
+;@	andeq z80cyc,z80cyc,#CYC_MASK
 	add z80pc,z80pc,r0
 	fetch 12
 ;@----------------------------------------------------------------------------
@@ -272,7 +272,7 @@ _20:	;@ JR NZ,*			Jump if not zero
 ;@----------------------------------------------------------------------------
 	ldrsb r0,[z80pc],#1
 	tst z80f,#PSR_Z
-	subeq cycles,cycles,#5*CYCLE
+	subeq z80cyc,z80cyc,#5*CYCLE
 	addeq z80pc,z80pc,r0
 	fetch 7
 ;@----------------------------------------------------------------------------
@@ -343,7 +343,7 @@ _28:	;@ JR Z,*			Jump if zero
 ;@----------------------------------------------------------------------------
 	ldrsb r0,[z80pc],#1
 	tst z80f,#PSR_Z
-	subne cycles,cycles,#5*CYCLE
+	subne z80cyc,z80cyc,#5*CYCLE
 	addne z80pc,z80pc,r0
 	fetch 7
 ;@----------------------------------------------------------------------------
@@ -394,7 +394,7 @@ _30:	;@ JR NC,*			Jump if no carry
 ;@----------------------------------------------------------------------------
 	ldrsb r0,[z80pc],#1
 	tst z80f,#PSR_C
-	subeq cycles,cycles,#5*CYCLE
+	subeq z80cyc,z80cyc,#5*CYCLE
 	addeq z80pc,z80pc,r0
 	fetch 7
 ;@----------------------------------------------------------------------------
@@ -460,7 +460,7 @@ _38:	;@ JR C,*			Jump if carry
 ;@----------------------------------------------------------------------------
 	ldrsb r0,[z80pc],#1
 	tst z80f,#PSR_C
-	subne cycles,cycles,#5*CYCLE
+	subne z80cyc,z80cyc,#5*CYCLE
 	addne z80pc,z80pc,r0
 	fetch 7
 ;@----------------------------------------------------------------------------
@@ -895,9 +895,9 @@ _76:	;@ HALT				Wait for interrupt.
 ;@----------------------------------------------------------------------------
 	sub z80pc,z80pc,#1
 	eatCycles 4								;@ Instruction takes 4 cycles at least
-	mvns r0,cycles,asr#CYC_SHIFT+2			;@ 
-	addmi cycles,cycles,r0,lsl#CYC_SHIFT+2	;@ Consume all remaining cycles in steps of 4.
-	ldr pc,[z80optbl,#z80NextTimeout]
+	mvns r0,z80cyc,asr#CYC_SHIFT+2			;@
+	addmi z80cyc,z80cyc,r0,lsl#CYC_SHIFT+2	;@ Consume all remaining cycles in steps of 4.
+	ldr pc,[z80ptr,#z80NextTimeout]
 ;@----------------------------------------------------------------------------
 _77:	;@ LD (HL),A
 ;@----------------------------------------------------------------------------
@@ -1293,7 +1293,7 @@ _C3:	;@ JP $nnnn
 	orr z80pc,r0,z80pc,lsl#8
 ;@	sub r1,z80pc,r1
 ;@	cmp r1,#-3
-;@	andpl cycles,cycles,#CYC_MASK
+;@	andpl z80cyc,z80cyc,#CYC_MASK
 	encodePC
 	fetch 10
 ;@----------------------------------------------------------------------------
@@ -1430,7 +1430,7 @@ _D8:	;@ RET C
 ;@----------------------------------------------------------------------------
 _D9:	;@ EXX				Exchange BC, DE & HL
 ;@----------------------------------------------------------------------------
-	add r0,z80optbl,#z80Regs2+8
+	add r0,z80ptr,#z80Regs2+8
 	swp z80bc,z80bc,[r0]
 	add r0,r0,#4
 	swp z80de,z80de,[r0]
@@ -1592,8 +1592,8 @@ _F2:	;@ JP P
 ;@----------------------------------------------------------------------------
 _F3:	;@ DI				Disable interrupt
 ;@----------------------------------------------------------------------------
-	strb z80a,[z80optbl,#z80Iff1]
-	strb z80a,[z80optbl,#z80Iff2]
+	strb z80a,[z80ptr,#z80Iff1]
+	strb z80a,[z80ptr,#z80Iff2]
 	fetch 4
 ;@----------------------------------------------------------------------------
 _F4:	;@ CALL P,$nnnn
@@ -1639,15 +1639,15 @@ _FA:	;@ JP M
 _FB:	;@ EI				Enable interrupt
 ;@----------------------------------------------------------------------------
 	eatCycles 4
-	ldrb r1,[z80optbl,#z80Iff1]
+	ldrb r1,[z80ptr,#z80Iff1]
 	eors r0,r1,#0xff
-	strbne r0,[z80optbl,#z80Iff2]
-	strbne r0,[z80optbl,#z80Iff1]
+	strbne r0,[z80ptr,#z80Iff2]
+	strbne r0,[z80ptr,#z80Iff1]
 ;@RETN_fix
 	ldrne r0,=EiFix
-	strne r0,[z80optbl,#z80NextTimeout]
-	strne cycles,[z80optbl,#z80OldCycles]
-	andne cycles,cycles,#CYC_MASK
+	strne r0,[z80ptr,#z80NextTimeout]
+	strne z80cyc,[z80ptr,#z80OldCycles]
+	andne z80cyc,z80cyc,#CYC_MASK
 	fetchForce
 	.pool
 ;@----------------------------------------------------------------------------
@@ -2356,7 +2356,7 @@ _DDDD:
 ;@----------------------------------------------------------------------------
 _DD:	;@ Extensions
 ;@----------------------------------------------------------------------------
-	add z80xy,z80optbl,#z80IX
+	add z80xy,z80ptr,#z80IX
 	adr r1,ddfdTable
 	ldrb r0,[z80pc],#1
 	ldr pc,[r1,r0,lsl#2]
@@ -2368,7 +2368,7 @@ _DDFD:
 ;@----------------------------------------------------------------------------
 _FD:	;@ Extensions
 ;@----------------------------------------------------------------------------
-	add z80xy,z80optbl,#z80IY
+	add z80xy,z80ptr,#z80IY
 	ldrb r0,[z80pc],#1
 	ldr pc,[pc,r0,lsl#2]
 	.long 0
@@ -2999,15 +2999,15 @@ _ED44:		;@ NEG A
 ;@----------------------------------------------------------------------------
 _ED46:		;@ IM 0
 ;@----------------------------------------------------------------------------
-	strb z80a,[z80optbl,#z80IM]	;@ zero IM
+	strb z80a,[z80ptr,#z80IM]	;@ zero IM
 	ldr r0,=Z80IRQMode0
-	str r0,[z80optbl,#z80IMFunction]
+	str r0,[z80ptr,#z80IMFunction]
 	fetch 8
 ;@----------------------------------------------------------------------------
 _ED47:		;@ LD I,A
 ;@----------------------------------------------------------------------------
 	mov r0,z80a,lsr#24
-	strb r0,[z80optbl,#z80I]
+	strb r0,[z80ptr,#z80I]
 	fetch 9
 ;@----------------------------------------------------------------------------
 _ED48:		;@ IN C,(C)
@@ -3039,19 +3039,19 @@ _ED4B:		;@ LD BC,(NN)
 _ED4D:		;@ RETI			Return from IRQ
 ;@----------------------------------------------------------------------------
 	mov lr,pc
-	ldr pc,[z80optbl,#z80IrqAckFunc]
+	ldr pc,[z80ptr,#z80IrqAckFunc]
 ;@----------------------------------------------------------------------------
 _ED45:		;@ RETN			Return from NMI
 ;@----------------------------------------------------------------------------
-	ldrb r0,[z80optbl,#z80Iff2]
-	strb r0,[z80optbl,#z80Iff1]
+	ldrb r0,[z80ptr,#z80Iff2]
+	strb r0,[z80ptr,#z80Iff1]
 	eatCycles 4
 
 ;@	tst r0,#0xFF
 ;@	ldrne r0,=EiFix
 ;@	strne r0,z80NextTimeout
-;@	strne cycles,z80OldCycles
-;@	andne cycles,cycles,#CYC_MASK
+;@	strne z80cyc,z80OldCycles
+;@	andne z80cyc,z80cyc,#CYC_MASK
 	b _C9
 ;@----------------------------------------------------------------------------
 ;@_ED4E:	;@ IM 0
@@ -3060,7 +3060,7 @@ _ED45:		;@ RETN			Return from NMI
 _ED4F:		;@ LD R,A
 ;@----------------------------------------------------------------------------
 	mov r0,z80a,lsr#24
-	strb r0,[z80optbl,#z80R]
+	strb r0,[z80ptr,#z80R]
 	fetch 9
 ;@----------------------------------------------------------------------------
 _ED50:		;@ IN D,(C)
@@ -3095,19 +3095,19 @@ _ED53:		;@ LD (NN),DE
 _ED56:		;@ IM 1
 ;@----------------------------------------------------------------------------
 	mov r0,#1
-	strb r0,[z80optbl,#z80IM]
+	strb r0,[z80ptr,#z80IM]
 	ldr r0,=Z80IRQMode1
-	str r0,[z80optbl,#z80IMFunction]
+	str r0,[z80ptr,#z80IMFunction]
 	fetch 8
 ;@----------------------------------------------------------------------------
 _ED57:		;@ LD A,I
 ;@----------------------------------------------------------------------------
-	ldrb r0,[z80optbl,#z80I]
+	ldrb r0,[z80ptr,#z80I]
 	movs z80a,r0,lsl#24
 	and z80f,z80f,#PSR_C
 	orrmi z80f,z80f,#PSR_S
 	orreq z80f,z80f,#PSR_Z
-	ldrb r0,[z80optbl,#z80Iff2]
+	ldrb r0,[z80ptr,#z80Iff2]
 	cmp r0,#0
 	orrne z80f,z80f,#PSR_P
 	fetch 9
@@ -3144,29 +3144,29 @@ _ED5B:		;@ LD DE,(NN)
 _ED5E:		;@ IM 2
 ;@----------------------------------------------------------------------------
 	mov r0,#2
-	strb r0,[z80optbl,#z80IM]
+	strb r0,[z80ptr,#z80IM]
 	ldr r0,=Z80IRQMode2
-	str r0,[z80optbl,#z80IMFunction]
+	str r0,[z80ptr,#z80IMFunction]
 	fetch 8
 	.pool
 ;@----------------------------------------------------------------------------
 _ED5F:		;@ LD A,R
 ;@----------------------------------------------------------------------------
-	ldrb r0,[z80optbl,#z80R]
+	ldrb r0,[z80ptr,#z80R]
 	and r0,r0,#0x80				;@
-	rsb r1,cycles,#0			;@
+	rsb r1,z80cyc,#0			;@
 	and r1,r1,#0x7F<<CYC_SHIFT	;@ Fix for Shanghai 2 GG.
 	orr r0,r0,r1,lsr#CYC_SHIFT	;@
 
 ;@	mov r0,r0,ror#7
 ;@	add r0,r0,#0x16000000		;@ Pseudo R counter, needed in Bank Panic.
 ;@	mov r0,r0,ror#25
-;@	strb r0,[z80optbl,#z80R]
+;@	strb r0,[z80ptr,#z80R]
 	movs z80a,r0,lsl#24
 	and z80f,z80f,#PSR_C
 	orrmi z80f,z80f,#PSR_S
 	orreq z80f,z80f,#PSR_Z
-	ldrb r0,[z80optbl,#z80Iff2]
+	ldrb r0,[z80ptr,#z80Iff2]
 	cmp r0,#0
 	orrne z80f,z80f,#PSR_P
 	fetch 9
@@ -3261,7 +3261,7 @@ _ED70:		;@ IN F,(C)		Only set flags
 ;@----------------------------------------------------------------------------
 _ED71:		;@ OUT (C),0
 ;@----------------------------------------------------------------------------
-	ldrb r0,[z80optbl,#z80Out0]
+	ldrb r0,[z80ptr,#z80Out0]
 	opOUTCr
 ;@----------------------------------------------------------------------------
 _ED72:		;@ SBC HL,SP
@@ -3438,11 +3438,11 @@ LDIRLoop:
 	add z80de,z80de,#0x00010000
 	subs z80bc,z80bc,#0x00010000
 	beq LDIREnd
-	subs cycles,cycles,#21*CYCLE
+	subs z80cyc,z80cyc,#21*CYCLE
 	bpl LDIRLoop
 	orr z80f,z80f,#PSR_P
 	sub z80pc,z80pc,#2
-	ldr pc,[z80optbl,#z80NextTimeout]
+	ldr pc,[z80ptr,#z80NextTimeout]
 LDIREnd:
 	fetch 16
 
@@ -3462,7 +3462,7 @@ _EDB1:		;@ CPIR
 	biceq z80f,z80f,#PSR_P
 	cmpne z80a,r0,lsl#24
 	subne z80pc,z80pc,#2
-	subne cycles,cycles,#5*CYCLE
+	subne z80cyc,z80cyc,#5*CYCLE
 	fetch 16
 ;@----------------------------------------------------------------------------
 _EDB2:		;@ INIR			Port(C) -> (HL), HL++
@@ -3477,14 +3477,14 @@ _EDB2:		;@ INIR			Port(C) -> (HL), HL++
 	orrmi z80f,z80f,#PSR_S
 	orreq z80f,z80f,#PSR_Z
 	subne z80pc,z80pc,#2
-	subne cycles,cycles,#5*CYCLE
+	subne z80cyc,z80cyc,#5*CYCLE
 	fetch 16
 
 ;@----------------------------------------------------------------------------
 OTIR_loop:
-	subs cycles,cycles,#21*CYCLE
+	subs z80cyc,z80cyc,#21*CYCLE
 	submi z80pc,z80pc,#2
-	ldrmi pc,[z80optbl,#z80NextTimeout]
+	ldrmi pc,[z80ptr,#z80NextTimeout]
 ;@----------------------------------------------------------------------------
 _EDB3:		;@ OTIR			(HL) -> Port(C), HL++
 ;@----------------------------------------------------------------------------
@@ -3512,7 +3512,7 @@ _EDB8:		;@ LDDR
 	subs z80bc,z80bc,#0x00010000
 	orrne z80f,z80f,#PSR_P
 	subne z80pc,z80pc,#2
-	subne cycles,cycles,#5*CYCLE
+	subne z80cyc,z80cyc,#5*CYCLE
 	fetch 16
 ;@----------------------------------------------------------------------------
 _EDB9:		;@ CPDR
@@ -3530,7 +3530,7 @@ _EDB9:		;@ CPDR
 	biceq z80f,z80f,#PSR_P
 	cmpne z80a,r0,lsl#24
 	subne z80pc,z80pc,#2
-	subne cycles,cycles,#5*CYCLE
+	subne z80cyc,z80cyc,#5*CYCLE
 	fetch 16
 ;@----------------------------------------------------------------------------
 _EDBA:		;@ INDR			Port(C) -> (HL), HL--
@@ -3545,7 +3545,7 @@ _EDBA:		;@ INDR			Port(C) -> (HL), HL--
 	orrmi z80f,z80f,#PSR_S
 	orreq z80f,z80f,#PSR_Z
 	subne z80pc,z80pc,#2
-	subne cycles,cycles,#5*CYCLE
+	subne z80cyc,z80cyc,#5*CYCLE
 	fetch 16
 ;@----------------------------------------------------------------------------
 _EDBB:		;@ OTDR			(HL) -> Port(C), HL--
@@ -3558,7 +3558,7 @@ _EDBB:		;@ OTDR			(HL) -> Port(C), HL--
 	orrmi z80f,z80f,#PSR_S
 	orreq z80f,z80f,#PSR_Z
 	subne z80pc,z80pc,#2
-	subne cycles,cycles,#5*CYCLE
+	subne z80cyc,z80cyc,#5*CYCLE
 	mov addy,z80bc,lsr#16
 	bl Z80Out
 	fetch 16
@@ -3573,7 +3573,7 @@ memRead8HL:					;@ Mem read ($0000-$FFFF)
 memRead8:					;@ Mem read ($0000-$FFFF)
 ;@----------------------------------------------------------------------------
 	and r1,addy,#0xE000
-	add r2,z80optbl,#z80ReadTbl
+	add r2,z80ptr,#z80ReadTbl
 	ldr pc,[r2,r1,lsr#11]		;@ In: addy,r0=val(bits 8-31=?)
 ;@----------------------------------------------------------------------------
 memWrite8DE:				;@ Mem write ($0000-$FFFF)
@@ -3583,13 +3583,13 @@ memWrite8DE:				;@ Mem write ($0000-$FFFF)
 memWrite8:					;@ Mem write ($0000-$FFFF)
 ;@----------------------------------------------------------------------------
 	and r1,addy,#0xE000
-	add r2,z80optbl,#z80WriteTbl
+	add r2,z80ptr,#z80WriteTbl
 	ldr pc,[r2,r1,lsr#11]		;@ In: addy,r0=val(bits 8-31=?)
 ;@----------------------------------------------------------------------------
 translateZ80PCToOffset:		;@ In = z80pc, out = offset z80pc
 ;@----------------------------------------------------------------------------
 	and r0,z80pc,#MEM_BANK_MASK
-	add r2,z80optbl,#z80MemTbl
+	add r2,z80ptr,#z80MemTbl
 	ldr r0,[r2,r0,lsr#MEM_BANK_SHIFT]	;@ In: z80pc.
 	storeLastBank r0
 	add z80pc,z80pc,r0
@@ -3599,7 +3599,7 @@ translateZ80PCToOffset:		;@ In = z80pc, out = offset z80pc
 ;@----------------------------------------------------------------------------
 Z80OutOfCycles:
 	sub z80pc,z80pc,#1
-	ldr pc,[z80optbl,#z80NextTimeout]
+	ldr pc,[z80ptr,#z80NextTimeout]
 returnToCaller:
 	ldmfd sp!,{lr}
 	bx lr
@@ -3608,8 +3608,8 @@ Z80SetResetPin:
 ;@----------------------------------------------------------------------------
 	cmp r0,#0
 	movne r0,#0x80
-	ldrb r1,[z80optbl,#z80ResetPin]
-	strb r0,[z80optbl,#z80ResetPin]
+	ldrb r1,[z80ptr,#z80ResetPin]
+	strb r0,[z80ptr,#z80ResetPin]
 	eor r1,r1,r0
 	ands r0,r0,r1
 	bxne lr						;@ Setting the Reset pin just halts the CPU until released.
@@ -3621,12 +3621,12 @@ Z80SetResetPin:
 								;@ z80Iff2:		(interrupt flag 2)
 								;@ z80Iff1:		(interrupt flag 1)
 	ldr r0,=Z80IRQMode0
-	str r0,[z80optbl,#z80IMFunction]
+	str r0,[z80ptr,#z80IMFunction]
 	mov z80pc,#0
-	str z80pc,[z80optbl,#z80I]
-	strb z80pc,[z80optbl,#z80Iff1]
+	str z80pc,[z80ptr,#z80I]
+	strb z80pc,[z80ptr,#z80Iff1]
 	encodePC
-	str z80pc,[z80optbl,#z80Regs+6*4]	;@ Store z80pc
+	str z80pc,[z80ptr,#z80Regs+6*4]	;@ Store z80pc
 	ldmfd sp!,{z80pc,lr}
 	bx lr
 ;@----------------------------------------------------------------------------
@@ -3634,37 +3634,37 @@ Z80SetNMIPin:
 ;@----------------------------------------------------------------------------
 	cmp r0,#0
 	movne r0,#0x66				;@ NMI vector
-	ldrb r1,[z80optbl,#z80NmiPin]
-	strb r0,[z80optbl,#z80NmiPin]
+	ldrb r1,[z80ptr,#z80NmiPin]
+	strb r0,[z80ptr,#z80NmiPin]
 	bics r0,r0,r1
-	strbne r0,[z80optbl,#z80NmiPending]
+	strbne r0,[z80ptr,#z80NmiPending]
 	bx lr
 ;@----------------------------------------------------------------------------
 Z80SetIRQPin:
 ;@----------------------------------------------------------------------------
 	cmp r0,#0
 	movne r0,#0x38				;@ Mode 1 IRQ vector
-	strb r0,[z80optbl,#z80IrqPin]
+	strb r0,[z80ptr,#z80IrqPin]
 	bx lr
 ;@----------------------------------------------------------------------------
 Z80RestoreAndRunXCycles:	;@ r0 = number of cycles to run
 ;@----------------------------------------------------------------------------
-	add r1,z80optbl,#z80Regs
+	add r1,z80ptr,#z80Regs
 	ldmia r1,{z80f-z80pc,z80sp}	;@ Restore Z80 state
 ;@----------------------------------------------------------------------------
 Z80RunXCycles:				;@ r0 = number of cycles to run
 ;@----------------------------------------------------------------------------
 	stmfd sp!,{lr}
 addR0Cycles:
-	add cycles,cycles,r0,lsl#CYC_SHIFT
+	add z80cyc,z80cyc,r0,lsl#CYC_SHIFT
 ;@----------------------------------------------------------------------------
 Z80CheckIRQs:
 ;@----------------------------------------------------------------------------
-	ldr r0,[z80optbl,#z80IrqPin]
+	ldr r0,[z80ptr,#z80IrqPin]
 	movs addy,r0,asr#16
 	bne handleResetAndNMI
 	ands addy,r0,r0,lsr#8
-	ldrne pc,[z80optbl,#z80IMFunction]
+	ldrne pc,[z80ptr,#z80IMFunction]
 ;@----------------------------------------------------------------------------
 Z80Go:						;@ Continue running
 ;@----------------------------------------------------------------------------
@@ -3673,21 +3673,21 @@ Z80Go:						;@ Continue running
 handleResetAndNMI:
 ;@----------------------------------------------------------------------------
 	bpl Z80NMI
-	and cycles,cycles,#CYC_MASK
-	ldr pc,[z80optbl,#z80NextTimeout]
+	and z80cyc,z80cyc,#CYC_MASK
+	ldr pc,[z80ptr,#z80NextTimeout]
 ;@----------------------------------------------------------------------------
 Z80IRQMode0:				;@ Execute opcode on databus
 ;@----------------------------------------------------------------------------
 	mov lr,pc
-	ldr pc,[z80optbl,#z80IrqVectorFunc]
+	ldr pc,[z80ptr,#z80IrqVectorFunc]
 	eatCycles 13
-	ldr pc,[z80optbl,r0,lsl#2]
+	ldr pc,[z80ptr,r0,lsl#2]
 ;@----------------------------------------------------------------------------
 Z80IRQMode2:				;@ Fetch vector via I reg + external
 ;@----------------------------------------------------------------------------
 	mov lr,pc
-	ldr pc,[z80optbl,#z80IrqVectorFunc]
-	ldrb addy,[z80optbl,#z80I]
+	ldr pc,[z80ptr,#z80IrqVectorFunc]
+	ldrb addy,[z80ptr,#z80I]
 	orr addy,r0,addy,lsl#8
 	readMem8
 	stmfd sp!,{r0}
@@ -3700,10 +3700,10 @@ Z80IRQMode2:				;@ Fetch vector via I reg + external
 Z80IRQMode1:				;@ Jump to 0x38
 ;@----------------------------------------------------------------------------
 	eatCycles 2
-	strb z80a,[z80optbl,#z80Iff2]	;@ Disable IRQs
+	strb z80a,[z80ptr,#z80Iff2]	;@ Disable IRQs
 Z80NMI:
-	strb z80a,[z80optbl,#z80NmiPending]	;@ Clear NMIPending
-	strb z80a,[z80optbl,#z80Iff1]	;@ Clear IFF1
+	strb z80a,[z80ptr,#z80NmiPending]	;@ Clear NMIPending
+	strb z80a,[z80ptr,#z80Iff1]	;@ Clear IFF1
 	ldrb r1,[z80pc]
 	cmp r1,#0x76				;@ Check if we're doing Halt.
 	addeq z80pc,z80pc,#1		;@ Get out of HALT
@@ -3717,9 +3717,9 @@ rstEntry:
 ;@----------------------------------------------------------------------------
 EiFix:	;@ EI should be delayed by 1 instruction.
 ;@----------------------------------------------------------------------------
-	ldr r0,[z80optbl,#z80OldCycles]
-	ldr r1,[z80optbl,#z80NextTimeout_]
-	str r1,[z80optbl,#z80NextTimeout]
+	ldr r0,[z80ptr,#z80OldCycles]
+	adr r1,returnToCaller
+	str r1,[z80ptr,#z80NextTimeout]
 	mov r0,r0,lsr#CYC_SHIFT			;@ Don't add any cpu bits.
 	b addR0Cycles
 ;@----------------------------------------------------------------------------
@@ -3739,7 +3739,7 @@ _DDNF:
 	mov r11,r11					;@ No$GBA breakpoint
 	orr r1,r0,r1,lsl#8
 	eatCycles 4
-	ldr pc,[z80optbl,r0,lsl#2]
+	ldr pc,[z80ptr,r0,lsl#2]
 ;@----------------------------------------------------------------------------
 _DDCBNF:
 ;@----------------------------------------------------------------------------
@@ -3781,45 +3781,44 @@ Z80IrqAckDummy:
 	bx lr
 
 ;@----------------------------------------------------------------------------
-Z80Reset:					;@ r0=z80optbl, r1 = cpu type
+Z80Reset:					;@ r0=z80ptr, r1 = cpu type
 ;@ Called by cpuReset, (r0-r3,r12 are free to use)
 ;@----------------------------------------------------------------------------
 	stmfd sp!,{r4-r11,lr}
-	mov z80optbl,r0
+	mov z80ptr,r0
 
 	ldr r0,=returnToCaller
-	str r0,[z80optbl,#z80NextTimeout]
-	str r0,[z80optbl,#z80NextTimeout_]
+	str r0,[z80ptr,#z80NextTimeout]
 
 	adr r0,registerValues		;@ Startup values for different versions of the cpu.
 	mov r2,#14*4
 	mla r1,r2,r1,r0
 
-	mov cycles,#0
+	mov z80cyc,#0
 	mov z80pc,#0
 	encodePC					;@ Get RESET vector
 	ldmia r1!,{r0,z80f-z80hl,z80sp}
-	strb r0,[z80optbl,#z80Out0]
-	add r2,z80optbl,#z80Regs
+	strb r0,[z80ptr,#z80Out0]
+	add r2,z80ptr,#z80Regs
 	stmia r2!,{z80f-z80pc,z80sp}
 	ldmia r1!,{r0,r3}
-	str r0,[z80optbl,#z80IX]
-	str r3,[z80optbl,#z80IY]
+	str r0,[z80ptr,#z80IX]
+	str r3,[z80ptr,#z80IY]
 	ldmia r1,{z80f-z80hl}
 	stmia r2,{z80f-z80hl}
 
 ;@ Clear other registers
 	mov r0,#0
-	str r0,[z80optbl,#z80I]
-	str r0,[z80optbl,#z80IrqPin]
-	str r0,[z80optbl,#z80NmiPin]
+	str r0,[z80ptr,#z80I]
+	str r0,[z80ptr,#z80IrqPin]
+	str r0,[z80ptr,#z80NmiPin]
 
 	ldr r0,=Z80IRQMode0
-	str r0,[z80optbl,#z80IMFunction]
+	str r0,[z80ptr,#z80IMFunction]
 	ldr r0,=Z80IrqVectorDummy
-	str r0,[z80optbl,#z80IrqVectorFunc]
+	str r0,[z80ptr,#z80IrqVectorFunc]
 	ldr r0,=Z80IrqAckDummy
-	str r0,[z80optbl,#z80IrqAckFunc]
+	str r0,[z80ptr,#z80IrqAckFunc]
 
 	ldmfd sp!,{r4-r11,lr}
 	bx lr
@@ -3833,15 +3832,15 @@ ggRegisters:	;@(GG)
 				.long 0xFF, 0x00 , 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
 
 ;@----------------------------------------------------------------------------
-Z80SaveState:				;@ In r0=destination, r1=z80optbl. Out r0=size.
+Z80SaveState:				;@ In r0=destination, r1=z80ptr. Out r0=size.
 	.type   Z80SaveState STT_FUNC
 ;@----------------------------------------------------------------------------
-	stmfd sp!,{r4,z80optbl,lr}
+	stmfd sp!,{r4,z80ptr,lr}
 
 	sub r4,r0,#z80Regs
-	mov z80optbl,r1
+	mov z80ptr,r1
 
-	add r1,z80optbl,#z80Regs
+	add r1,z80ptr,#z80Regs
 	mov r2,#z80StateEnd-z80StateStart	;@ Right now 0x48
 	bl memcpy
 
@@ -3851,33 +3850,33 @@ Z80SaveState:				;@ In r0=destination, r1=z80optbl. Out r0=size.
 	sub r0,r0,r2
 	str r0,[r4,#z80Regs+6*4]			;@ Normal z80pc
 
-	ldmfd sp!,{r4,z80optbl,lr}
+	ldmfd sp!,{r4,z80ptr,lr}
 	mov r0,#z80StateEnd-z80StateStart	;@ Right now 0x48
 	bx lr
 ;@----------------------------------------------------------------------------
-Z80LoadState:				;@ In r0=z80optbl, r1=source. Out r0=size.
+Z80LoadState:				;@ In r0=z80ptr, r1=source. Out r0=size.
 	.type   Z80LoadState STT_FUNC
 ;@----------------------------------------------------------------------------
-	stmfd sp!,{z80pc,z80optbl,lr}
+	stmfd sp!,{z80pc,z80ptr,lr}
 
-	mov z80optbl,r0
-	add r0,z80optbl,#z80Regs
+	mov z80ptr,r0
+	add r0,z80ptr,#z80Regs
 	mov r2,#z80StateEnd-z80StateStart	;@ Right now 0x48
 	bl memcpy
 
-	ldr z80pc,[z80optbl,#z80Regs+6*4]	;@ Normal z80pc
+	ldr z80pc,[z80ptr,#z80Regs+6*4]	;@ Normal z80pc
 	encodePC
-	str z80pc,[z80optbl,#z80Regs+6*4]	;@ Rewrite offseted z80pc
+	str z80pc,[z80ptr,#z80Regs+6*4]	;@ Rewrite offseted z80pc
 
 	ldr r1,=Z80IRQMode0
-	ldrb r0,[z80optbl,#z80IM]
+	ldrb r0,[z80ptr,#z80IM]
 	cmp r0,#1
 	ldreq r1,=Z80IRQMode1
 	cmp r0,#2
 	ldreq r1,=Z80IRQMode2
-	str r1,[z80optbl,#z80IMFunction]
+	str r1,[z80ptr,#z80IMFunction]
 
-	ldmfd sp!,{z80pc,z80optbl,lr}
+	ldmfd sp!,{z80pc,z80ptr,lr}
 ;@----------------------------------------------------------------------------
 Z80GetStateSize:			;@ Out r0=state size.
 	.type   Z80GetStateSize STT_FUNC
@@ -3904,7 +3903,7 @@ defaultZ80:
 	.space 64*4		;@ z80MemTbl $0000-FFFF
 	.space 8*4		;@ z80ReadTbl $0000-FFFF
 	.space 8*4		;@ z80WriteTbl $0000-FFFF
-z80StateStart:
+
 	;@ group these together for save/loadstate
 	.space 8*4	;@ z80Regs		(flg, a, bc, de, hl,cycles,pc,sp)
 	.space 5*4	;@ z80Regs2		(flg',a',bc',de',hl')
@@ -3923,10 +3922,9 @@ z80StateStart:
 	.byte 0 ;@ z80NmiPin:	(NMI)	A
 	.byte 0 ;@ z80Out0:				H
 	.space 2;@ z80Padding1			V
-z80StateEnd:
+
 	.long 0 ;@ z80LastBank:			Last memmap added to PC (used to calculate current PC)
 	.long 0 ;@ z80OldCycles:		Backup of cycles				A
-	.long 0 ;@ z80NextTimeout_:		Backup of nexttimeout			V
 	.long 0 ;@ z80NextTimeout:		Jump here when cycles runs out
 	.long 0 ;@ z80IMFunction:		Interrupt Mode Function
 	.long 0 ;@ z80IrqVectorFunc:	Interrupt Vector Function
