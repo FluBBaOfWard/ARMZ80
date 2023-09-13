@@ -44,7 +44,7 @@
 
 /*
 fetchDebug:
-	ldrmi pc,[z80ptr,#z80NextTimeout]
+	bmi returnToCaller
 
 	encodeFLG
 	and r0,r0,#0xFF
@@ -897,7 +897,7 @@ _76:	;@ HALT				Wait for interrupt.
 	eatCycles 4								;@ Instruction takes 4 cycles at least
 	mvns r0,z80cyc,asr#CYC_SHIFT+2			;@
 	addmi z80cyc,z80cyc,r0,lsl#CYC_SHIFT+2	;@ Consume all remaining cycles in steps of 4.
-	ldr pc,[z80ptr,#z80NextTimeout]
+	b returnToCaller
 ;@----------------------------------------------------------------------------
 _77:	;@ LD (HL),A
 ;@----------------------------------------------------------------------------
@@ -1643,13 +1643,8 @@ _FB:	;@ EI				Enable interrupt
 	eors r0,r1,#0xff
 	strbne r0,[z80ptr,#z80Iff2]
 	strbne r0,[z80ptr,#z80Iff1]
-;@RETN_fix
-	ldrne r0,=EiFix
-	strne r0,[z80ptr,#z80NextTimeout]
-	strne z80cyc,[z80ptr,#z80OldCycles]
-	andne z80cyc,z80cyc,#CYC_MASK
-	fetchForce
-	.pool
+	bne Z80DelayIrqCheck
+	fetch 0
 ;@----------------------------------------------------------------------------
 _FC:	;@ CALL M,$nnnn
 ;@----------------------------------------------------------------------------
@@ -3048,10 +3043,7 @@ _ED45:		;@ RETN			Return from NMI
 	eatCycles 4
 
 ;@	tst r0,#0xFF
-;@	ldrne r0,=EiFix
-;@	strne r0,z80NextTimeout
-;@	strne z80cyc,z80OldCycles
-;@	andne z80cyc,z80cyc,#CYC_MASK
+;@	orrne z80cyc,z80cyc,#0xC0000000
 	b _C9
 ;@----------------------------------------------------------------------------
 ;@_ED4E:	;@ IM 0
@@ -3442,7 +3434,7 @@ LDIRLoop:
 	bpl LDIRLoop
 	orr z80f,z80f,#PSR_P
 	sub z80pc,z80pc,#2
-	ldr pc,[z80ptr,#z80NextTimeout]
+	b returnToCaller
 LDIREnd:
 	fetch 16
 
@@ -3484,7 +3476,7 @@ _EDB2:		;@ INIR			Port(C) -> (HL), HL++
 OTIR_loop:
 	subs z80cyc,z80cyc,#21*CYCLE
 	submi z80pc,z80pc,#2
-	ldrmi pc,[z80ptr,#z80NextTimeout]
+	bmi returnToCaller
 ;@----------------------------------------------------------------------------
 _EDB3:		;@ OTIR			(HL) -> Port(C), HL++
 ;@----------------------------------------------------------------------------
@@ -3599,7 +3591,9 @@ translateZ80PCToOffset:		;@ In = z80pc, out = offset z80pc
 ;@----------------------------------------------------------------------------
 Z80OutOfCycles:
 	sub z80pc,z80pc,#1
-	ldr pc,[z80ptr,#z80NextTimeout]
+	mov z80cyc,z80cyc,lsl#2		;@ Check for delayed irq check.
+	movs z80cyc,z80cyc,asr#2
+	bpl Z80CheckIRQs
 returnToCaller:
 	ldmfd sp!,{lr}
 	bx lr
@@ -3674,7 +3668,7 @@ handleResetAndNMI:
 ;@----------------------------------------------------------------------------
 	bpl Z80NMI
 	and z80cyc,z80cyc,#CYC_MASK
-	ldr pc,[z80ptr,#z80NextTimeout]
+	b returnToCaller
 ;@----------------------------------------------------------------------------
 Z80IRQMode0:				;@ Execute opcode on databus
 ;@----------------------------------------------------------------------------
@@ -3715,15 +3709,11 @@ rstEntry:
 	encodePC
 	fetch 11					;@ 13 for Mode1 IRQ
 ;@----------------------------------------------------------------------------
-EiFix:	;@ EI should be delayed by 1 instruction.
+Z80DelayIrqCheck:			;@ This can be used on EI/IRET
 ;@----------------------------------------------------------------------------
-	ldr r0,[z80ptr,#z80OldCycles]
-	adr r1,returnToCaller
-	str r1,[z80ptr,#z80NextTimeout]
-	mov r0,r0,lsr#CYC_SHIFT			;@ Don't add any cpu bits.
-	b addR0Cycles
+	orr z80cyc,z80cyc,#0xC0000000
+	fetchForce
 ;@----------------------------------------------------------------------------
-
 
 
 
@@ -3786,9 +3776,6 @@ Z80Reset:					;@ r0=z80ptr, r1 = cpu type
 ;@----------------------------------------------------------------------------
 	stmfd sp!,{r4-r11,lr}
 	mov z80ptr,r0
-
-	ldr r0,=returnToCaller
-	str r0,[z80ptr,#z80NextTimeout]
 
 	adr r0,registerValues		;@ Startup values for different versions of the cpu.
 	mov r2,#14*4
@@ -3924,8 +3911,7 @@ defaultZ80:
 	.space 2;@ z80Padding1			V
 
 	.long 0 ;@ z80LastBank:			Last memmap added to PC (used to calculate current PC)
-	.long 0 ;@ z80OldCycles:		Backup of cycles				A
-	.long 0 ;@ z80NextTimeout:		Jump here when cycles runs out
+	.space 4*2
 	.long 0 ;@ z80IMFunction:		Interrupt Mode Function
 	.long 0 ;@ z80IrqVectorFunc:	Interrupt Vector Function
 	.long 0 ;@ z80IrqAckFunc:		Interrupt Acknowledge Function

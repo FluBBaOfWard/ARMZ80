@@ -29,15 +29,14 @@ z80Iff2:			.byte 0
 z80IrqPin:			.byte 0
 z80Iff1:			.byte 0
 z80NmiPending:		.byte 0
-z80ResetPin:		.space 1
+z80ResetPin:		.byte 0
 
 z80NmiPin:			.byte 0
 z80Out0:			.byte 0
 z80Padding1:		.space 2
 z80StateEnd:
 z80LastBank:		.long 0
-z80OldCycles:		.long 0		;@ Normal cycles (without flags)
-z80NextTimeout:		.long 0
+z80Alignment:		.space 4*2
 z80IMFunction:		.long 0
 z80IrqVectorFunc:	.long 0
 z80IrqAckFunc:		.long 0

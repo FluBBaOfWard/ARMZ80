@@ -114,10 +114,10 @@
 	executeOpcode \count
 	.endm
 /*	.macro fetch count
+	ldrb r0,[z80pc],#1
 	subs z80cyc,z80cyc,#(\count)*CYCLE
-	ldrplb r0,[z80pc],#1
 	ldrpl pc,[z80ptr,r0,lsl#2]
-	ldr pc,[z80ptr,#z80NextTimeout]
+	b Z80OutOfCycles
 	.endm
 */
 	.macro fetchForce

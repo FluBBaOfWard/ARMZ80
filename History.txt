@@ -2,6 +2,9 @@ ARMZ80 revision history
 -=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+V1.9.9 - 2023-09-13 (FluBBa)
+	Removed OldCycles & NextTimeout variables.
+
 V1.9.8 - 2022-09-28 (FluBBa)
 	Fixed calling of the cpu.
 	Refactored reset function to take a pointer to cpu core.
