@@ -36,10 +36,10 @@ z80Out0:			.byte 0
 z80Padding1:		.space 2
 z80StateEnd:
 z80LastBank:		.long 0
-z80Alignment:		.space 4*2
 z80IMFunction:		.long 0
 z80IrqVectorFunc:	.long 0
 z80IrqAckFunc:		.long 0
+z80Alignment:		.space 2*4
 z80Opz:				.space 256*4
 z80PZST:			.space 256
 z80Size:

@@ -26,10 +26,10 @@ typedef struct {
 	u8 Out0;
 	u8 Padding1[2];
 	u32 LastBank;
-//	u32 alignment[2];
 	u32 *IMFunction;
 	u32 *IrqVectorFunc;
 	u32 *IrqAckFunc;
+	u32 alignment[2];
 	u32 Opz[256];
 	u8 PZST[256];
 

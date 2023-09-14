@@ -3649,7 +3649,6 @@ Z80RestoreAndRunXCycles:	;@ r0 = number of cycles to run
 Z80RunXCycles:				;@ r0 = number of cycles to run
 ;@----------------------------------------------------------------------------
 	stmfd sp!,{lr}
-addR0Cycles:
 	add z80cyc,z80cyc,r0,lsl#CYC_SHIFT
 ;@----------------------------------------------------------------------------
 Z80CheckIRQs:
@@ -3871,7 +3870,7 @@ Z80GetStateSize:			;@ Out r0=state size.
 	mov r0,#z80StateEnd-z80StateStart	;@ Right now 0x48
 	bx lr
 ;@----------------------------------------------------------------------------
-Z80RedirectOpcode:		;@ In r0=opcode, r1=address.
+Z80RedirectOpcode:		;@ In r0=opcode, r1=function.
 	.type   Z80RedirectOpcode STT_FUNC
 ;@----------------------------------------------------------------------------
 	ldr r2,=Z80OpTable
@@ -3911,10 +3910,10 @@ defaultZ80:
 	.space 2;@ z80Padding1			V
 
 	.long 0 ;@ z80LastBank:			Last memmap added to PC (used to calculate current PC)
-	.space 4*2
 	.long 0 ;@ z80IMFunction:		Interrupt Mode Function
 	.long 0 ;@ z80IrqVectorFunc:	Interrupt Vector Function
 	.long 0 ;@ z80IrqAckFunc:		Interrupt Acknowledge Function
+	.space 2*4
 
 Z80OpTable:
 	.long _00,_01,_02,_03,_04,_05,_06,_07,_08,_09,_0A,_0B,_0C,_0D,_0E,_0F
