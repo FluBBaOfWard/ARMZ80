@@ -3913,7 +3913,6 @@ defaultZ80:
 	.long 0 ;@ z80IMFunction:		Interrupt Mode Function
 	.long 0 ;@ z80IrqVectorFunc:	Interrupt Vector Function
 	.long 0 ;@ z80IrqAckFunc:		Interrupt Acknowledge Function
-	.space 2*4
 
 Z80OpTable:
 	.long _00,_01,_02,_03,_04,_05,_06,_07,_08,_09,_0A,_0B,_0C,_0D,_0E,_0F

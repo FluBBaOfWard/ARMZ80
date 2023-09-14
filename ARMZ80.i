@@ -12,7 +12,7 @@
 	z80xy		.req lr			;@ Pointer to IX or IY reg
 	addy		.req r12		;@ Keep this at r12 (scratch for APCS)
 
-	.struct -(104*4)			;@ Changes section so make sure it's set before real code.
+	.struct -(102*4)			;@ Changes section so make sure it's set before real code.
 z80MemTbl:			.space 64*4
 z80ReadTbl:			.space 8*4
 z80WriteTbl:		.space 8*4
@@ -39,7 +39,6 @@ z80LastBank:		.long 0
 z80IMFunction:		.long 0
 z80IrqVectorFunc:	.long 0
 z80IrqAckFunc:		.long 0
-z80Alignment:		.space 2*4
 z80Opz:				.space 256*4
 z80PZST:			.space 256
 z80Size:

@@ -29,7 +29,6 @@ typedef struct {
 	u32 *IMFunction;
 	u32 *IrqVectorFunc;
 	u32 *IrqAckFunc;
-	u32 alignment[2];
 	u32 Opz[256];
 	u8 PZST[256];
 
