@@ -15,23 +15,16 @@ You can use defines to alter the behaviour of the emulator.
 
 ## Projects that use this cpu core
 
-https://github.com/FluBBaOfWard/BlackTigerDS
-
-https://github.com/FluBBaOfWard/BlackTigerGBA
-
-https://github.com/FluBBaOfWard/GhostsNGoblinsDS
-
-https://github.com/FluBBaOfWard/GreenBeretGBA
-
-https://github.com/FluBBaOfWard/GreenBeretDS
-
-https://github.com/FluBBaOfWard/NGPDS
-
-https://github.com/FluBBaOfWard/NGPGBA
-
-https://github.com/FluBBaOfWard/PunchOutDS
-
-https://github.com/FluBBaOfWard/S8DS
+* https://github.com/FluBBaOfWard/BlackTigerDS
+* https://github.com/FluBBaOfWard/BlackTigerGBA
+* https://github.com/FluBBaOfWard/GhostsNGoblinsDS
+* https://github.com/FluBBaOfWard/GreenBeretGBA
+* https://github.com/FluBBaOfWard/GreenBeretDS
+* https://github.com/FluBBaOfWard/IronHorseDS
+* https://github.com/FluBBaOfWard/NGPDS
+* https://github.com/FluBBaOfWard/NGPGBA
+* https://github.com/FluBBaOfWard/PunchOutDS
+* https://github.com/FluBBaOfWard/S8DS
 
 ## Credits
 
