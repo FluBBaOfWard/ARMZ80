@@ -7,7 +7,6 @@ ARMZ80 To do
 	 * Copy whole opcode- plus flags-table?
 	 * In/Out needs a pointer to table?
 	Optimize NMI/IRQ check more?
-	Check NMI for Coleco games?
 	Emulate X & Y flags more correctly.
 
 ------------------------------------------------------------------------------
@@ -105,5 +104,3 @@ _27:	;@ DAA				Decimal Adjust Accumulator
 	0xD + 0xA = 0x17
 	0xE + 0xA = 0x18
 	0xF + 0xA = 0x19
-
-

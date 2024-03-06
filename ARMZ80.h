@@ -67,8 +67,10 @@ int Z80GetStateSize(void);
  */
 void Z80RedirectOpcode(int opcode, void *function);
 
-void Z80SetIRQPin(bool set);
-void Z80SetNMIPin(bool set);
+void Z80SetIRQPin(bool state, ARMZ80Core *cpu);
+void Z80SetNMIPin(bool state, ARMZ80Core *cpu);
+void Z80SetResetPin(bool state, ARMZ80Core *cpu);
+
 void Z80RestoreAndRunXCycles(int cycles);
 void Z80RunXCycles(int cycles);
 

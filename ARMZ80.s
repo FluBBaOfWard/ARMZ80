@@ -25,6 +25,9 @@
 	.global Z80SetIRQPin
 	.global Z80SetNMIPin
 	.global Z80SetResetPin
+	.global Z80SetIRQPinCurrentCpu
+	.global Z80SetNMIPinCurrentCpu
+	.global Z80SetResetPinCurrentCpu
 	.global Z80RestoreAndRunXCycles
 	.global Z80RunXCycles
 	.global Z80SaveState
@@ -3598,16 +3601,22 @@ returnToCaller:
 	ldmfd sp!,{lr}
 	bx lr
 ;@----------------------------------------------------------------------------
-Z80SetResetPin:
+Z80SetResetPinCurrentCpu:	;@ r0=pin state
+;@----------------------------------------------------------------------------
+	mov r1,z80ptr
+;@----------------------------------------------------------------------------
+Z80SetResetPin:				;@ r0=pin state, r1=cpu
+	.type   Z80SetResetPin STT_FUNC
 ;@----------------------------------------------------------------------------
 	cmp r0,#0
 	movne r0,#0x80
-	ldrb r1,[z80ptr,#z80ResetPin]
-	strb r0,[z80ptr,#z80ResetPin]
-	eor r1,r1,r0
-	ands r0,r0,r1
+	ldrb r2,[r1,#z80ResetPin]
+	strb r0,[r1,#z80ResetPin]
+	eor r2,r2,r0
+	ands r0,r0,r2
 	bxne lr						;@ Setting the Reset pin just halts the CPU until released.
-	stmfd sp!,{z80pc,lr}
+	stmfd sp!,{z80pc,z80ptr,lr}
+	mov z80ptr,r1
 								;@ Clear out these regs.
 								;@ z80I:		(Interrupt vector)
 								;@ z80R:		(Refresh reg)
@@ -3621,24 +3630,35 @@ Z80SetResetPin:
 	strb z80pc,[z80ptr,#z80Iff1]
 	encodePC
 	str z80pc,[z80ptr,#z80Regs+6*4]	;@ Store z80pc
-	ldmfd sp!,{z80pc,lr}
+	ldmfd sp!,{z80pc,z80ptr,lr}
 	bx lr
+
 ;@----------------------------------------------------------------------------
-Z80SetNMIPin:
+Z80SetNMIPinCurrentCpu:	;@ r0=pin state
+;@----------------------------------------------------------------------------
+	mov r1,z80ptr
+;@----------------------------------------------------------------------------
+Z80SetNMIPin:				;@ r0=pin state, r1=cpu
+	.type   Z80SetNMIPin STT_FUNC
 ;@----------------------------------------------------------------------------
 	cmp r0,#0
 	movne r0,#0x66				;@ NMI vector
-	ldrb r1,[z80ptr,#z80NmiPin]
-	strb r0,[z80ptr,#z80NmiPin]
-	bics r0,r0,r1
-	strbne r0,[z80ptr,#z80NmiPending]
+	ldrb r2,[r1,#z80NmiPin]
+	strb r0,[r1,#z80NmiPin]
+	bics r0,r0,r2
+	strbne r0,[r1,#z80NmiPending]
 	bx lr
 ;@----------------------------------------------------------------------------
-Z80SetIRQPin:
+Z80SetIRQPinCurrentCpu:		;@ r0=pin state
+;@----------------------------------------------------------------------------
+	mov r1,z80ptr
+;@----------------------------------------------------------------------------
+Z80SetIRQPin:				;@ r0=pin state, r1=cpu
+	.type   Z80SetIRQPin STT_FUNC
 ;@----------------------------------------------------------------------------
 	cmp r0,#0
 	movne r0,#0x38				;@ Mode 1 IRQ vector
-	strb r0,[z80ptr,#z80IrqPin]
+	strb r0,[r1,#z80IrqPin]
 	bx lr
 ;@----------------------------------------------------------------------------
 Z80RestoreAndRunXCycles:	;@ r0 = number of cycles to run
@@ -3771,7 +3791,7 @@ Z80IrqAckDummy:
 
 ;@----------------------------------------------------------------------------
 Z80Reset:					;@ r0=z80ptr, r1 = cpu type
-;@ Called by cpuReset, (r0-r3,r12 are free to use)
+	.type   Z80Reset STT_FUNC
 ;@----------------------------------------------------------------------------
 	stmfd sp!,{r4-r11,lr}
 	mov z80ptr,r0
