@@ -6,9 +6,9 @@ extern "C" {
 #endif
 
 typedef struct {
-	u32 memTbl[64];
-	u32 readTbl[8];
-	u32 writeTbl[8];
+	u8 *memTbl[64];
+	u8 (*readTbl[8])(void);
+	void (*writeTbl[8])(u8);
 
 	u32 regs[8];
 	u32 regs2[5];
@@ -65,7 +65,7 @@ int Z80GetStateSize(void);
  * @param  opcode: Which opcode to redirect.
  * @param  *function: Pointer to new function .
  */
-void Z80RedirectOpcode(int opcode, void *function);
+void Z80RedirectOpcode(int opcode, void (*function)(void));
 
 void Z80SetIRQPin(bool state, ARMZ80Core *cpu);
 void Z80SetNMIPin(bool state, ARMZ80Core *cpu);
