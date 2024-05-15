@@ -25,11 +25,11 @@ typedef struct {
 	u8 NmiPin;
 	u8 Out0;
 	u8 Padding1[2];
-	u32 LastBank;
+	u8 *LastBank;
 	void (*IMFunction)(void);
 	u8 (*IrqVectorFunc)(void);
 	void (*IrqAckFunc)(void);
-	u32 Opz[256];
+	void (*Opz[256])(void);
 	u8 PZST[256];
 
 } ARMZ80Core;
