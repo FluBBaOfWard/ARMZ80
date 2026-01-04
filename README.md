@@ -19,8 +19,7 @@ You can use defines to alter the behaviour of the emulator.
 * <https://github.com/FluBBaOfWard/BlackTigerGBA>
 * <https://github.com/FluBBaOfWard/GhostsNGoblinsDS>
 * <https://github.com/FluBBaOfWard/GreenBeretGBA>
-* <https://github.com/FluBBaOfWard/GreenBeretDS>
-* <https://github.com/FluBBaOfWard/IronHorseDS>
+* <https://github.com/FluBBaOfWard/K80DS>
 * <https://github.com/FluBBaOfWard/NGPDS>
 * <https://github.com/FluBBaOfWard/NGPGBA>
 * <https://github.com/FluBBaOfWard/PunchOutDS>
@@ -33,6 +32,8 @@ Reesy & Dwedit for help and inspiration with a lot of things.
 
 Fredrik Ahlström
 
-X/Twitter @TheRealFluBBa
+<https://bsky.app/profile/therealflubba.bsky.social>
 
 <https://www.github.com/FluBBaOfWard>
+
+X/Twitter @TheRealFluBBa

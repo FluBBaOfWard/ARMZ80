@@ -1,3 +1,6 @@
+#if !__ASSEMBLER__
+	#error This header file is only for use in assembly files!
+#endif
 
 				;@ r0,r1,r2=temp regs.
 	z80f		.req r3			;@
