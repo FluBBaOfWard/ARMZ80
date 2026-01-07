@@ -7,13 +7,13 @@
 
 #ifdef Z80_USE_FAST_MEM
 	#ifdef NDS
-	.section .itcm						;@ For the NDS ARM9
+	.section .itcm, "ax", %progbits		;@ For the NDS ARM9
 	#elif GBA
 	.section .iwram, "ax", %progbits	;@ For the GBA
 	#endif
 #else
 	#ifdef GBA
-	.section .ewram, "ax"				;@ For the GBA
+	.section .ewram, "ax", %progbits	;@ For the GBA
 	#else
 	.section .text						;@ For anything else
 	#endif
@@ -3738,9 +3738,9 @@ Z80DelayIrqCheck:			;@ This can be used on EI/IRET
 
 ;@----------------------------------------------------------------------------
 #ifdef GBA
-	.section .ewram, "ax"		;@ For the GBA
+	.section .ewram, "ax", %progbits	;@ For the GBA
 #else
-	.section .text				;@ For everything else
+	.section .text						;@ For everything else
 #endif
 ;@----------------------------------------------------------------------------
 _DDNF:
@@ -3898,9 +3898,9 @@ Z80RedirectOpcode:		;@ In r0=opcode, r1=function.
 	bx lr
 ;@----------------------------------------------------------------------------
 #ifdef NDS
-	.section .dtcm, "ax", %progbits				;@ For the NDS
+	.section .dtcm, "a", %progbits				;@ For the NDS
 #elif GBA
-	.section .iwram, "ax", %progbits			;@ For the GBA
+	.section .iwram, "a", %progbits			;@ For the GBA
 #else
 	.section .text
 #endif
