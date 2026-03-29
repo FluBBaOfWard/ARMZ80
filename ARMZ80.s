@@ -3781,7 +3781,8 @@ _xx:						;@ Invalid opcode
 	]*/
 	fetch 4
 
-	.section .text				;@ For everything else
+	.section .text
+	.align 2
 ;@----------------------------------------------------------------------------
 Z80IrqVectorDummy:
 ;@----------------------------------------------------------------------------
@@ -3898,12 +3899,13 @@ Z80RedirectOpcode:		;@ In r0=opcode, r1=function.
 	bx lr
 ;@----------------------------------------------------------------------------
 #ifdef NDS
-	.section .dtcm, "a", %progbits				;@ For the NDS
+	.section .dtcm, "a", %progbits			;@ For the NDS
 #elif GBA
 	.section .iwram, "a", %progbits			;@ For the GBA
 #else
-	.section .text
+	.section .text							;@ For everything else
 #endif
+	.align 2
 ;@----------------------------------------------------------------------------
 defaultZ80:
 	.space 64*4		;@ z80MemTbl $0000-FFFF

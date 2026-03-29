@@ -24,6 +24,7 @@ You can use defines to alter the behaviour of the emulator.
 * <https://github.com/FluBBaOfWard/NGPGBA>
 * <https://github.com/FluBBaOfWard/PunchOutDS>
 * <https://github.com/FluBBaOfWard/S8DS>
+* <https://github.com/FluBBaOfWard/S8GBA>
 
 ## Credits
 
