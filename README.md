@@ -10,7 +10,8 @@ C code. Register 12 (r12 a.k.a addy) is used as address in read/write operations
 
 You can use defines to alter the behaviour of the emulator.
 "Z80_LARGE_MAP" use a larger memory map for finer control of memory layout.
-"Z80_FAST" inserts more of the mem handling in the opcode, for a speed up (YMMV).
+"Z80_FAST" inserts more of the mem handling in the opcode for a speed up (YMMV).
+"Z80_DIRECT_MEM" skip the mem read jump table & just use the mem pointer table.
 "Z80_USE_FAST_MEM" use fast memory on GBA and NDS for the cpu core.
 
 ## Projects that use this cpu core

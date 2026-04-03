@@ -3,35 +3,7 @@
 #endif
 
 #include "ARMZ80.i"
-							;@ ARM flags
-	.equ PSR_S, 0x00000008		;@ Sign (negative)
-	.equ PSR_Z, 0x00000004		;@ Zero
-	.equ PSR_C, 0x00000002		;@ Carry
-	.equ PSR_V, 0x00000001		;@ Overflow/Parity
-	.equ PSR_P, 0x00000001		;@ Overflow/Parity
 
-	.equ PSR_n, 0x00000080		;@ Was the last opcode add or sub?
-	.equ PSR_X, 0x00000040		;@ z80_X (unused)
-	.equ PSR_Y, 0x00000020		;@ z80_Y (unused)
-	.equ PSR_H, 0x00000010		;@ Half carry
-
-
-							;@ Z80 flags
-	.equ SF, 0x80				;@ Sign (negative)
-	.equ ZF, 0x40				;@ Zero
-	.equ YF, 0x20				;@ z80_Y (unused)
-	.equ HF, 0x10				;@ Half carry
-	.equ XF, 0x08				;@ z80_X (unused)
-	.equ PF, 0x04				;@ Overflow/Parity
-	.equ VF, 0x04				;@ Overflow/Parity
-	.equ NF, 0x02				;@ Was the last opcode add or sub?
-	.equ CF, 0x01				;@ Carry
-
-;@----------------------------------------------------------------------------
-	.equ CYC_SHIFT, 8
-	.equ CYCLE, 1<<CYC_SHIFT	;@ One cycle
-	.equ CYC_MASK, CYCLE-1		;@ Mask
-;@----------------------------------------------------------------------------
 #ifdef Z80_LARGE_MAP
 	.equ MEM_BANK_MASK, 0xFC00	;@ Granularity of bank switching
 	.equ MEM_BANK_SHIFT, 8		;@ Shift of adr to get bank
@@ -134,11 +106,17 @@
 
 	.macro readMem8
 #ifdef Z80_FAST
-	and r1,addy,#0xE000
-	add r2,z80ptr,#z80ReadTbl
-	mov lr,pc
-	ldr pc,[r2,r1,lsr#11]		;@ In: addy,r0=val(bits 8-31=?)
-0:
+	#ifndef Z80_DIRECT_MEM
+		and r1,addy,#0xE000
+		add r2,z80ptr,#z80ReadTbl
+		mov lr,pc
+		ldr pc,[r2,r1,lsr#11]		;@ In: addy,r0=val(bits 8-31=?)
+	#else
+		and r1,addy,#MEM_BANK_MASK
+		add r2,z80ptr,#z80MemTbl
+		ldr r1,[r2,r1,lsr#MEM_BANK_SHIFT]
+		ldrb r0,[r1,addy]
+	#endif
 #else
 	bl memRead8
 #endif
@@ -177,7 +155,6 @@
 	add r2,z80ptr,#z80WriteTbl
 	mov lr,pc
 	ldr pc,[r2,r1,lsr#11]		;@ In: addy,r0=val(bits 8-31=?)
-0:
 #else
 	bl memWrite8
 #endif

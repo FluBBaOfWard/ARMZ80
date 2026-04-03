@@ -2,6 +2,9 @@ ARMZ80 revision history
 -=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+V1.9.11 - 2026-01-02 (FluBBa)
+	Added possibility to skip the memory read jump table.
+
 V1.9.10 - 2024-03-06 (FluBBa)
 	Made set IRQ/NMI/Reset-pin useable from C.
 
