@@ -7,6 +7,7 @@ This is a Zilog Z80 cpu emulator for ARM32 architechtures.
 One can not simply use the CPU core in a C environment.
 Register 3 (r3) is used as a cpu flag holder, so it must be preserved if calling
 C code. Register 12 (r12 a.k.a addy) is used as address in read/write operations.
+You must also implement Z80In/Z80InBC & Z80Out/Z80OutBC. 
 
 You can use defines to alter the behaviour of the emulator.
 "Z80_LARGE_MAP" use a larger memory map for finer control of memory layout.

@@ -667,8 +667,7 @@
 ;@---------------------------------------
 
 	.macro opINrC
-	mov addy,z80bc,lsr#16
-	bl Z80In
+	bl Z80InBC
 	getPzsTbl r1
 	ldrb r1,[r1,r0]				;@ Get PZS
 	and z80f,z80f,#PSR_C		;@ Keep C
@@ -724,8 +723,7 @@
 ;@---------------------------------------
 
 	.macro opOUTCr
-	mov addy,z80bc,lsr#16
-	bl Z80Out
+	bl Z80OutBC
 	fetch 12
 	.endm
 

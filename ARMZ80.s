@@ -3345,8 +3345,7 @@ _EDA1:		;@ CPI
 ;@----------------------------------------------------------------------------
 _EDA2:		;@ INI			Port(C) -> (HL), HL++
 ;@----------------------------------------------------------------------------
-	mov addy,z80bc,lsr#16
-	bl Z80In
+	bl Z80InBC
 	and z80f,r0,#PSR_n			;@ Minus sets n
 	writeMem8HL
 	add z80hl,z80hl,#0x00010000
@@ -3368,8 +3367,7 @@ _EDA3:		;@ OUTI			(HL) -> Port(C), HL++
 	tst z80bc,#0xFF000000
 	orrmi z80f,z80f,#PSR_S
 	orreq z80f,z80f,#PSR_Z
-	mov addy,z80bc,lsr#16
-	bl Z80Out
+	bl Z80OutBC
 	fetch 16
 ;@----------------------------------------------------------------------------
 _EDA8:		;@ LDD
@@ -3399,8 +3397,7 @@ _EDA9:		;@ CPD
 ;@----------------------------------------------------------------------------
 _EDAA:		;@ IND			Port(C) -> (HL), HL--
 ;@----------------------------------------------------------------------------
-	mov addy,z80bc,lsr#16
-	bl Z80In
+	bl Z80InBC
 	and z80f,r0,#PSR_n			;@ Minus sets n
 	writeMem8HL
 	sub z80hl,z80hl,#0x00010000
@@ -3419,8 +3416,7 @@ _EDAB:		;@ OUTD			(HL) -> Port(C), HL--
 	tst z80bc,#0xFF000000
 	orrmi z80f,z80f,#PSR_S
 	orreq z80f,z80f,#PSR_Z
-	mov addy,z80bc,lsr#16
-	bl Z80Out
+	bl Z80OutBC
 	fetch 16
 
 ;@----------------------------------------------------------------------------
@@ -3462,8 +3458,7 @@ _EDB1:		;@ CPIR
 ;@----------------------------------------------------------------------------
 _EDB2:		;@ INIR			Port(C) -> (HL), HL++
 ;@----------------------------------------------------------------------------
-	mov addy,z80bc,lsr#16
-	bl Z80In
+	bl Z80InBC
 	and z80f,r0,#PSR_n			;@ Minus sets n
 	writeMem8HL
 	add z80hl,z80hl,#0x00010000
@@ -3490,8 +3485,7 @@ _EDB3:		;@ OTIR			(HL) -> Port(C), HL++
 	adds r1,r1,r0,lsl#24
 	orrcs z80f,z80f,#PSR_C+PSR_H
 	sub z80bc,z80bc,#0x01000000
-	mov addy,z80bc,lsr#16
-	bl Z80Out
+	bl Z80OutBC
 	tst z80bc,#0xFF000000
 	orrmi z80f,z80f,#PSR_S
 	bne OTIR_loop
@@ -3530,8 +3524,7 @@ _EDB9:		;@ CPDR
 ;@----------------------------------------------------------------------------
 _EDBA:		;@ INDR			Port(C) -> (HL), HL--
 ;@----------------------------------------------------------------------------
-	mov addy,z80bc,lsr#16
-	bl Z80In
+	bl Z80InBC
 	and z80f,r0,#PSR_n			;@ Minus sets n
 	writeMem8HL
 	sub z80hl,z80hl,#0x00010000
@@ -3554,8 +3547,7 @@ _EDBB:		;@ OTDR			(HL) -> Port(C), HL--
 	orreq z80f,z80f,#PSR_Z
 	subne z80pc,z80pc,#2
 	subne z80cyc,z80cyc,#5*CYCLE
-	mov addy,z80bc,lsr#16
-	bl Z80Out
+	bl Z80OutBC
 	fetch 16
 ;@----------------------------------------------------------------------------
 
