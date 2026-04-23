@@ -88,13 +88,7 @@
 	getNextOpcode
 	executeOpcode \count
 	.endm
-/*	.macro fetch count
-	ldrb r0,[z80pc],#1
-	subs z80cyc,z80cyc,#(\count)*CYCLE
-	ldrpl pc,[z80ptr,r0,lsl#2]
-	b Z80OutOfCycles
-	.endm
-*/
+
 	.macro fetchForce
 	getNextOpcode
 	ldr pc,[z80ptr,r0,lsl#2]

@@ -2,8 +2,29 @@
 
 #include "ARMZ80mac.h"
 
-	.syntax unified
-	.arm
+	.extern Z80In
+	.extern Z80InBC
+	.extern Z80Out
+	.extern Z80OutBC
+
+	.global Z80OpTable
+//	.global Z80MemWriteTbl
+//	.global Z80MemReadTbl
+	.global translateZ80PCToOffset
+
+	.global Z80Reset
+	.global Z80SetIRQPin
+	.global Z80SetNMIPin
+	.global Z80SetResetPin
+	.global Z80SetIRQPinCurrentCpu
+	.global Z80SetNMIPinCurrentCpu
+	.global Z80SetResetPinCurrentCpu
+	.global Z80RestoreAndRunXCycles
+	.global Z80RunXCycles
+	.global Z80SaveState
+	.global Z80LoadState
+	.global Z80GetStateSize
+	.global Z80RedirectOpcode
 
 #ifdef Z80_USE_FAST_MEM
 	#ifdef NDS
@@ -20,30 +41,8 @@
 #endif
 	.align 2
 
-
-	.global Z80Reset
-	.global Z80SetIRQPin
-	.global Z80SetNMIPin
-	.global Z80SetResetPin
-	.global Z80SetIRQPinCurrentCpu
-	.global Z80SetNMIPinCurrentCpu
-	.global Z80SetResetPinCurrentCpu
-	.global Z80RestoreAndRunXCycles
-	.global Z80RunXCycles
-	.global Z80SaveState
-	.global Z80LoadState
-	.global Z80GetStateSize
-	.global Z80RedirectOpcode
-
-	.global Z80OpTable
-//	.global Z80MemWriteTbl
-//	.global Z80MemReadTbl
-	.global translateZ80PCToOffset
-	.global Z80OutOfCycles
-
-	.extern Z80In
-	.extern Z80Out
-
+	.syntax unified
+	.arm
 
 /*
 fetchDebug:
@@ -3593,47 +3592,15 @@ translateZ80PCToOffset:		;@ In = z80pc, out = offset z80pc
 ;@----------------------------------------------------------------------------
 Z80OutOfCycles:
 	sub z80pc,z80pc,#1
-	mov z80cyc,z80cyc,lsl#2		;@ Check for delayed irq check.
-	movs z80cyc,z80cyc,asr#2
+	movs r0,z80cyc,lsl#2		;@ Check for delayed irq check.
+	movpl z80cyc,r0,asr#2
 	bpl Z80CheckIRQs
 returnToCaller:
 	ldmfd sp!,{lr}
 	bx lr
-;@----------------------------------------------------------------------------
-Z80SetResetPinCurrentCpu:	;@ r0=pin state
-;@----------------------------------------------------------------------------
-	mov r1,z80ptr
-;@----------------------------------------------------------------------------
-Z80SetResetPin:				;@ r0=pin state, r1=cpu
-	.type   Z80SetResetPin STT_FUNC
-;@----------------------------------------------------------------------------
-	cmp r0,#0
-	movne r0,#0x80
-	ldrb r2,[r1,#z80ResetPin]
-	strb r0,[r1,#z80ResetPin]
-	eor r2,r2,r0
-	ands r0,r0,r2
-	bxne lr						;@ Setting the Reset pin just halts the CPU until released.
-	stmfd sp!,{z80pc,z80ptr,lr}
-	mov z80ptr,r1
-								;@ Clear out these regs.
-								;@ z80I:		(Interrupt vector)
-								;@ z80R:		(Refresh reg)
-								;@ z80IM:		(interrupt mode)
-								;@ z80Iff2:		(interrupt flag 2)
-								;@ z80Iff1:		(interrupt flag 1)
-	ldr r0,=Z80IRQMode0
-	str r0,[z80ptr,#z80IMFunction]
-	mov z80pc,#0
-	str z80pc,[z80ptr,#z80I]
-	strb z80pc,[z80ptr,#z80Iff1]
-	encodePC
-	str z80pc,[z80ptr,#z80Regs+6*4]	;@ Store z80pc
-	ldmfd sp!,{z80pc,z80ptr,lr}
-	bx lr
 
 ;@----------------------------------------------------------------------------
-Z80SetNMIPinCurrentCpu:	;@ r0=pin state
+Z80SetNMIPinCurrentCpu:		;@ r0=pin state
 ;@----------------------------------------------------------------------------
 	mov r1,z80ptr
 ;@----------------------------------------------------------------------------
@@ -3727,7 +3694,7 @@ rstEntry:
 	encodePC
 	fetch 11					;@ 13 for Mode1 IRQ
 ;@----------------------------------------------------------------------------
-Z80DelayIrqCheck:			;@ This can be used on EI/IRET
+Z80DelayIrqCheck:			;@ This can be used on EI/RETI
 ;@----------------------------------------------------------------------------
 	orr z80cyc,z80cyc,#0xC0000000
 	fetchForce
@@ -3787,6 +3754,38 @@ Z80IrqVectorDummy:
 ;@----------------------------------------------------------------------------
 	mov r0,#0xFF
 Z80IrqAckDummy:
+	bx lr
+;@----------------------------------------------------------------------------
+Z80SetResetPinCurrentCpu:	;@ r0=pin state
+;@----------------------------------------------------------------------------
+	mov r1,z80ptr
+;@----------------------------------------------------------------------------
+Z80SetResetPin:				;@ r0=pin state, r1=cpu
+	.type   Z80SetResetPin STT_FUNC
+;@----------------------------------------------------------------------------
+	cmp r0,#0
+	movne r0,#0x80
+	ldrb r2,[r1,#z80ResetPin]
+	strb r0,[r1,#z80ResetPin]
+	eor r2,r2,r0
+	ands r0,r0,r2
+	bxne lr						;@ Setting the Reset pin just halts the CPU until released.
+	stmfd sp!,{z80pc,z80ptr,lr}
+	mov z80ptr,r1
+								;@ Clear out these regs.
+								;@ z80I:		(Interrupt vector)
+								;@ z80R:		(Refresh reg)
+								;@ z80IM:		(interrupt mode)
+								;@ z80Iff2:		(interrupt flag 2)
+								;@ z80Iff1:		(interrupt flag 1)
+	ldr r0,=Z80IRQMode0
+	str r0,[z80ptr,#z80IMFunction]
+	mov z80pc,#0
+	str z80pc,[z80ptr,#z80I]
+	strb z80pc,[z80ptr,#z80Iff1]
+	encodePC
+	str z80pc,[z80ptr,#z80Regs+6*4]	;@ Store z80pc
+	ldmfd sp!,{z80pc,z80ptr,lr}
 	bx lr
 
 ;@----------------------------------------------------------------------------

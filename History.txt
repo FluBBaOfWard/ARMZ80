@@ -2,7 +2,7 @@ ARMZ80 revision history
 -=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-V1.9.11 - 2026-04-08 (FluBBa)
+V1.9.11 - 2026-04-12 (FluBBa)
 	Added possibility to skip the memory read jump table.
 	Must now also implement Z80InBC & Z80OutBC outside of cpu core.
 
