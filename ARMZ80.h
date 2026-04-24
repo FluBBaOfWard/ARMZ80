@@ -1,3 +1,7 @@
+//
+//  ARMZ80.h
+//  Zilog Z80 cpu emulator for arm32.
+//
 #ifndef ARMZ80_HEADER
 #define ARMZ80_HEADER
 
@@ -5,11 +9,13 @@
 extern "C" {
 #endif
 
-typedef struct {
-	u8 *memTbl[64];
-	u8 (*readTbl[8])(void);
-	void (*writeTbl[8])(u8);
+#ifdef Z80_LARGE_MAP
+	#define MEM_TBL_SIZE 64		// Number of banks for memTbl
+#else
+	#define MEM_TBL_SIZE 8		// Number of banks for memTbl
+#endif
 
+typedef struct {
 	u32 regs[8];
 	u32 regs2[5];
 	u32 IX;
@@ -29,6 +35,11 @@ typedef struct {
 	void (*IMFunction)(void);
 	u8 (*IrqVectorFunc)(void);
 	void (*IrqAckFunc)(void);
+
+	u8 (*readTbl[8])(void);
+	void (*writeTbl[8])(u8);
+	u8 *memTbl[MEM_TBL_SIZE];
+
 	void (*Opz[256])(void);
 	u8 PZST[256];
 

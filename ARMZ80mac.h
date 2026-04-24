@@ -1,3 +1,7 @@
+;@
+;@  ARMZ80mac.h
+;@  Zilog Z80 cpu emulator for arm32.
+;@
 #if !__ASSEMBLER__
 	#error This header file is only for use in assembly files!
 #endif

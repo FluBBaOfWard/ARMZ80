@@ -1,5 +1,15 @@
+;@
+;@  ARMZ80.i
+;@  Zilog Z80 cpu emulator for arm32.
+;@
 #if !__ASSEMBLER__
 	#error This header file is only for use in assembly files!
+#endif
+
+#ifdef Z80_LARGE_MAP
+	.equ MEM_TBL_SIZE, 64		;@ Number of banks for memTbl
+#else
+	.equ MEM_TBL_SIZE, 8		;@ Number of banks for memTbl
 #endif
 
 				;@ r0,r1,r2=temp regs.
@@ -44,10 +54,7 @@
 	.equ CYCLE, 1<<CYC_SHIFT	;@ One cycle
 	.equ CYC_MASK, CYCLE-1		;@ Mask
 ;@----------------------------------------------------------------------------
-	.struct -(102*4)			;@ Changes section so make sure it's set before real code.
-z80MemTbl:			.space 64*4
-z80ReadTbl:			.space 8*4
-z80WriteTbl:		.space 8*4
+	.struct -((MEM_TBL_SIZE+38)*4)	;@ Changes section so make sure it's set before real code.
 z80StateStart:
 z80Regs:			.space 8*4
 z80Regs2:			.space 5*4
@@ -67,10 +74,15 @@ z80NmiPin:			.byte 0
 z80Out0:			.byte 0
 z80Padding1:		.space 2
 z80StateEnd:
+
 z80LastBank:		.long 0
 z80IMFunction:		.long 0
 z80IrqVectorFunc:	.long 0
 z80IrqAckFunc:		.long 0
+z80ReadTbl:			.space 8*4
+z80WriteTbl:		.space 8*4
+z80MemTbl:			.space MEM_TBL_SIZE*4
+
 z80Opz:				.space 256*4
 z80PZST:			.space 256
 z80Size:

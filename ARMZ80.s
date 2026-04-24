@@ -1,3 +1,7 @@
+;@
+;@  ARMZ80.s
+;@  Zilog Z80 cpu emulator for arm32.
+;@
 #ifdef __arm__
 
 #include "ARMZ80mac.h"
@@ -21,6 +25,7 @@
 	.global Z80SetResetPinCurrentCpu
 	.global Z80RestoreAndRunXCycles
 	.global Z80RunXCycles
+	.global Z80OutOfCycles
 	.global Z80SaveState
 	.global Z80LoadState
 	.global Z80GetStateSize
@@ -3906,10 +3911,6 @@ Z80RedirectOpcode:		;@ In r0=opcode, r1=function.
 	.align 2
 ;@----------------------------------------------------------------------------
 defaultZ80:
-	.space 64*4		;@ z80MemTbl $0000-FFFF
-	.space 8*4		;@ z80ReadTbl $0000-FFFF
-	.space 8*4		;@ z80WriteTbl $0000-FFFF
-
 	;@ group these together for save/loadstate
 	.space 8*4	;@ z80Regs		(flg, a, bc, de, hl,cycles,pc,sp)
 	.space 5*4	;@ z80Regs2		(flg',a',bc',de',hl')
@@ -3934,6 +3935,9 @@ defaultZ80:
 	.long 0 ;@ z80IrqVectorFunc:	Interrupt Vector Function
 	.long 0 ;@ z80IrqAckFunc:		Interrupt Acknowledge Function
 
+	.space 8*4				;@ z80ReadTbl $0000-FFFF
+	.space 8*4				;@ z80WriteTbl $0000-FFFF
+	.space MEM_TBL_SIZE*4	;@ z80MemTbl $0000-FFFF
 Z80OpTable:
 	.long _00,_01,_02,_03,_04,_05,_06,_07,_08,_09,_0A,_0B,_0C,_0D,_0E,_0F
 	.long _10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_1A,_1B,_1C,_1D,_1E,_1F
