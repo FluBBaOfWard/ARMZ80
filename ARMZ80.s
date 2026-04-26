@@ -12,8 +12,6 @@
 	.extern Z80OutBC
 
 	.global Z80OpTable
-//	.global Z80MemWriteTbl
-//	.global Z80MemReadTbl
 	.global translateZ80PCToOffset
 
 	.global Z80Reset
@@ -3556,6 +3554,7 @@ _EDBB:		;@ OTDR			(HL) -> Port(C), HL--
 ;@----------------------------------------------------------------------------
 
 #ifndef Z80_FAST
+	#ifndef Z80_DIRECT_MEM
 ;@----------------------------------------------------------------------------
 memRead8HL:					;@ Mem read ($0000-$FFFF)
 ;@----------------------------------------------------------------------------
@@ -3563,16 +3562,10 @@ memRead8HL:					;@ Mem read ($0000-$FFFF)
 ;@----------------------------------------------------------------------------
 memRead8:					;@ Mem read ($0000-$FFFF)
 ;@----------------------------------------------------------------------------
-#ifndef Z80_DIRECT_MEM
 	and r1,addy,#0xE000
 	add r2,z80ptr,#z80ReadTbl
 	ldr pc,[r2,r1,lsr#11]		;@ In: addy,r0=val(bits 8-31=?)
-#else
-	and r1,addy,#MEM_BANK_MASK
-	add r2,z80ptr,#z80MemTbl
-	ldr r1,[r2,r1,lsr#MEM_BANK_SHIFT]
-	ldrb r0,[r1,addy]
-#endif
+	#endif
 ;@----------------------------------------------------------------------------
 memWrite8DE:				;@ Mem write ($0000-$FFFF)
 ;@----------------------------------------------------------------------------

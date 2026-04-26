@@ -31,9 +31,14 @@
 
 	.macro encodePC				;@ Translate z80pc from Z80 PC to rom offset
 #ifdef Z80_FAST
-	and r0,z80pc,#MEM_BANK_MASK
-	add r2,z80ptr,#z80MemTbl
-	ldr r0,[r2,r0,lsr#MEM_BANK_SHIFT]
+	#ifdef Z80_INV_MEM_TBL
+		mvn r0,z80pc,lsr#MEM_BANK_SHIFT+2
+		ldr r0,[z80ptr,r0,lsl#2]
+	#else
+		and r0,z80pc,#MEM_BANK_MASK
+		add r2,z80ptr,#z80MemTbl
+		ldr r0,[r2,r0,lsr#MEM_BANK_SHIFT]
+	#endif
 	storeLastBank r0
 	add z80pc,z80pc,r0
 #else
@@ -104,36 +109,63 @@
 
 	.macro readMem8
 #ifdef Z80_FAST
-	#ifndef Z80_DIRECT_MEM
+	#ifdef Z80_DIRECT_MEM
+		#ifdef Z80_INV_MEM_TBL
+			mvn r1,addy,lsr#MEM_BANK_SHIFT+2
+			ldr r1,[z80ptr,r1,lsl#2]
+		#else
+			and r1,addy,#MEM_BANK_MASK
+			add r2,z80ptr,#z80MemTbl
+			ldr r1,[r2,r1,lsr#MEM_BANK_SHIFT]
+		#endif
+		ldrb r0,[r1,addy]
+	#else
 		and r1,addy,#0xE000
 		add r2,z80ptr,#z80ReadTbl
 		mov lr,pc
 		ldr pc,[r2,r1,lsr#11]		;@ In: addy,r0=val(bits 8-31=?)
-	#else
-		and r1,addy,#MEM_BANK_MASK
-		add r2,z80ptr,#z80MemTbl
-		ldr r1,[r2,r1,lsr#MEM_BANK_SHIFT]
-		ldrb r0,[r1,addy]
 	#endif
 #else
 	bl memRead8
 #endif
 	.endm
 
+	.macro readMem8Reg reg
+#ifdef Z80_FAST
+	#ifdef Z80_DIRECT_MEM
+		#ifdef Z80_INV_MEM_TBL
+			mvn r1,\reg,lsr#MEM_BANK_SHIFT+2+16
+			ldr r1,[z80ptr,r1,lsl#2]
+		#else
+			mov r1,\reg,lsr#MEM_BANK_SHIFT+2+16
+			add r2,z80ptr,#z80MemTbl
+			ldr r1,[r2,r1,lsl#2]
+		#endif
+		ldrb r0,[r1,\reg,lsr#16]
+	#else
+		mov addy,\reg,lsr#16
+		and r1,addy,#0xE000
+		add r2,z80ptr,#z80ReadTbl
+		mov lr,pc
+		ldr pc,[r2,r1,lsr#11]		;@ In: addy,r0=val(bits 8-31=?)
+	#endif
+#else
+	mov addy,\reg,lsr#16
+	bl memRead8
+#endif
+	.endm
+
 	.macro readMem8BC
-	mov addy,z80bc,lsr#16
-	readMem8
+	readMem8Reg z80bc
 	.endm
 
 	.macro readMem8DE
-	mov addy,z80de,lsr#16
-	readMem8
+	readMem8Reg z80de
 	.endm
 
 	.macro readMem8HL
 #ifdef Z80_FAST
-	mov addy,z80hl,lsr#16
-	readMem8
+	readMem8Reg z80hl
 #else
 	bl memRead8HL
 #endif
@@ -230,20 +262,30 @@
 #ifdef Z80_FAST
 	.macro push16				;@ Push r0
 	sub z80sp,z80sp,#0x00020000
-	and r1,z80sp,#MEM_BANK_MASK<<16
+#ifdef Z80_INV_MEM_TBL
+	mvn r1,z80sp,lsr#MEM_BANK_SHIFT+2+16
+	ldr r2,[z80ptr,r1,lsl#2]
+#else
+	mov r1,z80sp,lsr#MEM_BANK_SHIFT+2+16
 	add r2,z80ptr,#z80MemTbl
-	ldr r2,[r2,r1,lsr#MEM_BANK_SHIFT+16]
-	strb r0,[r2,z80sp,lsr#16]
+	ldr r2,[r2,r1,lsl#2]
+#endif
 	add r1,z80sp,#0x00010000
+	strb r0,[r2,z80sp,lsr#16]
 	mov r0,r0,lsr#8
 	strb r0,[r2,r1,lsr#16]
 	.endm						;@ r1,r2=?
 
 	.macro push16Reg reg		;@ Push BC,DE,HL
 	sub z80sp,z80sp,#0x00020000
-	and r1,z80sp,#MEM_BANK_MASK<<16
+#ifdef Z80_INV_MEM_TBL
+	mvn r1,z80sp,lsr#MEM_BANK_SHIFT+2+16
+	ldr r2,[z80ptr,r1,lsl#2]
+#else
+	mov r1,z80sp,lsr#MEM_BANK_SHIFT+2+16
 	add r2,z80ptr,#z80MemTbl
-	ldr r2,[r2,r1,lsr#MEM_BANK_SHIFT+16]
+	ldr r2,[r2,r1,lsl#2]
+#endif
 	mov r0,\reg,lsr#16
 	strb r0,[r2,z80sp,lsr#16]
 	add r1,z80sp,#0x00010000
@@ -252,9 +294,14 @@
 	.endm						;@ r1,r2=?
 
 	.macro pop16Reg reg			;@ Pop BC,DE,HL
-	and r0,z80sp,#MEM_BANK_MASK<<16
+#ifdef Z80_INV_MEM_TBL
+	mvn r0,z80sp,lsr#MEM_BANK_SHIFT+2+16
+	ldr r1,[z80ptr,r0,lsl#2]
+#else
+	mov r0,z80sp,lsr#MEM_BANK_SHIFT+2+16
 	add r1,z80ptr,#z80MemTbl
-	ldr r1,[r1,r0,lsr#MEM_BANK_SHIFT+16]
+	ldr r1,[r1,r0,lsl#2]
+#endif
 	ldrb \reg,[r1,z80sp,lsr#16]
 	add z80sp,z80sp,#0x00010000
 	ldrb r1,[r1,z80sp,lsr#16]
@@ -264,9 +311,14 @@
 	.endm						;@ r0,r1=?
 
 	.macro pop16AF				;@ Pop AF
-	and r0,z80sp,#MEM_BANK_MASK<<16
+#ifdef Z80_INV_MEM_TBL
+	mvn r0,z80sp,lsr#MEM_BANK_SHIFT+2+16
+	ldr r1,[z80ptr,r0,lsl#2]
+#else
+	mov r0,z80sp,lsr#MEM_BANK_SHIFT+2+16
 	add r1,z80ptr,#z80MemTbl
-	ldr r1,[r1,r0,lsr#MEM_BANK_SHIFT+16]
+	ldr r1,[r1,r0,lsl#2]
+#endif
 	ldrb r0,[r1,z80sp,lsr#16]
 	add z80sp,z80sp,#0x00010000
 	ldrb z80a,[r1,z80sp,lsr#16]
@@ -275,9 +327,14 @@
 	.endm						;@ r0=flags,r1=?
 
 	.macro pop16PC				;@ Pop PC
-	and r0,z80sp,#MEM_BANK_MASK<<16
+#ifdef Z80_INV_MEM_TBL
+	mvn r0,z80sp,lsr#MEM_BANK_SHIFT+2+16
+	ldr r1,[z80ptr,r0,lsl#2]
+#else
+	mov r0,z80sp,lsr#MEM_BANK_SHIFT+2+16
 	add r1,z80ptr,#z80MemTbl
-	ldr r1,[r1,r0,lsr#MEM_BANK_SHIFT+16]
+	ldr r1,[r1,r0,lsl#2]
+#endif
 	ldrb z80pc,[r1,z80sp,lsr#16]
 	add z80sp,z80sp,#0x00010000
 	ldrb r0,[r1,z80sp,lsr#16]
@@ -286,9 +343,14 @@
 	.endm						;@ r0,r1=?
 
 	.macro pop16IX				;@ Pop IX
-	and r0,z80sp,#MEM_BANK_MASK<<16
+#ifdef Z80_INV_MEM_TBL
+	mvn r0,z80sp,lsr#MEM_BANK_SHIFT+2+16
+	ldr r1,[z80ptr,r0,lsl#2]
+#else
+	mov r0,z80sp,lsr#MEM_BANK_SHIFT+2+16
 	add r1,z80ptr,#z80MemTbl
-	ldr r1,[r1,r0,lsr#MEM_BANK_SHIFT+16]
+	ldr r1,[r1,r0,lsl#2]
+#endif
 	ldrb r0,[r1,z80sp,lsr#16]
 	add z80sp,z80sp,#0x00010000
 	ldrb r1,[r1,z80sp,lsr#16]
