@@ -11,6 +11,11 @@
 #else
 	.equ MEM_TBL_SIZE, 8		;@ Number of banks for memTbl
 #endif
+#ifdef Z80_DIRECT_MEM
+	.equ READ_TBL_SIZE, 0		;@ Number of banks for readTbl
+#else
+	.equ READ_TBL_SIZE, 8		;@ Number of banks for readTbl
+#endif
 
 				;@ r0,r1,r2=temp regs.
 	z80f		.req r3			;@
@@ -54,7 +59,7 @@
 	.equ CYCLE, 1<<CYC_SHIFT	;@ One cycle
 	.equ CYC_MASK, CYCLE-1		;@ Mask
 ;@----------------------------------------------------------------------------
-	.struct -((MEM_TBL_SIZE+38)*4)	;@ Changes section so make sure it's set before real code.
+	.struct -((MEM_TBL_SIZE+READ_TBL_SIZE+30)*4)	;@ Changes section so make sure it's set before real code.
 z80StateStart:
 z80Regs:			.space 8*4
 z80Regs2:			.space 5*4
@@ -79,7 +84,9 @@ z80LastBank:		.long 0
 z80IMFunction:		.long 0
 z80IrqVectorFunc:	.long 0
 z80IrqAckFunc:		.long 0
+#ifndef Z80_DIRECT_MEM
 z80ReadTbl:			.space 8*4
+#endif
 z80WriteTbl:		.space 8*4
 z80MemTbl:			.space MEM_TBL_SIZE*4
 

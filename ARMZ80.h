@@ -35,8 +35,9 @@ typedef struct {
 	void (*IMFunction)(void);
 	u8 (*IrqVectorFunc)(void);
 	void (*IrqAckFunc)(void);
-
+#ifndef Z80_DIRECT_MEM
 	u8 (*readTbl[8])(void);
+#endif
 	void (*writeTbl[8])(u8);
 	u8 *memTbl[MEM_TBL_SIZE];
 

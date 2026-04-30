@@ -3928,7 +3928,7 @@ defaultZ80:
 	.long 0 ;@ z80IrqVectorFunc:	Interrupt Vector Function
 	.long 0 ;@ z80IrqAckFunc:		Interrupt Acknowledge Function
 
-	.space 8*4				;@ z80ReadTbl $0000-FFFF
+	.space READ_TBL_SIZE*4	;@ z80ReadTbl $0000-FFFF
 	.space 8*4				;@ z80WriteTbl $0000-FFFF
 	.space MEM_TBL_SIZE*4	;@ z80MemTbl $0000-FFFF
 Z80OpTable:
