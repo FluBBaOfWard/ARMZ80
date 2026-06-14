@@ -3591,11 +3591,11 @@ translateZ80PCToOffset:		;@ In = z80pc, out = offset z80pc
 Z80OutOfCycles:
 	sub z80pc,z80pc,#1
 	movs r0,z80cyc,lsl#2		;@ Check for delayed irq check.
-	movpl z80cyc,r0,asr#2
-	bpl Z80CheckIRQs
+	ldmfdmi sp!,{pc}
+	mov z80cyc,r0,asr#2
+	b Z80CheckIRQs
 returnToCaller:
-	ldmfd sp!,{lr}
-	bx lr
+	ldmfd sp!,{pc}
 
 ;@----------------------------------------------------------------------------
 Z80SetNMIPinCurrentCpu:		;@ r0=pin state
